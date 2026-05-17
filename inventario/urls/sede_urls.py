@@ -35,6 +35,11 @@ from inventario.views.importar_traslado_views import descargar_formato_traslados
 from inventario.views.inventario_categoria_views import inventario_categoria_list
 from inventario.views.exportar_inventario_categoria_views import exportar_inventario_categoria_excel
 from inventario.views.exportar_inventario_categoria_views import exportar_inventario_categoria_pdf
+from inventario.views.promocion_views import promocion_list
+from inventario.views.promocion_views import promocion_create
+from inventario.views.promocion_views import promocion_update
+from inventario.views.exportar_promocion_views import exportar_promociones_excel
+from inventario.views.exportar_promocion_views import exportar_promociones_pdf
 
 app_name = 'inventario'
 
@@ -76,4 +81,9 @@ urlpatterns = [
     path('inventario-categorias/',inventario_categoria_list,name='inventario_categoria_list'),
     path('inventario-categorias/exportar/excel/',exportar_inventario_categoria_excel,name='exportar_inventario_categoria_excel'),
     path('inventario-categorias/exportar/pdf/',exportar_inventario_categoria_pdf,name='exportar_inventario_categoria_pdf'),
+    path('promociones/',promocion_list,name='promocion_list'),
+    path('promociones/nueva/',promocion_create,name='promocion_create'),
+    path('promociones/editar/<int:pk>/',promocion_update,name='promocion_update'),
+    path('promociones/exportar/excel/',exportar_promociones_excel,name='exportar_promociones_excel'),
+    path('promociones/exportar/pdf/',exportar_promociones_pdf,name='exportar_promociones_pdf'),
 ]

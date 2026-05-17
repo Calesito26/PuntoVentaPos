@@ -1,0 +1,161 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    {{ titulo }}
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .promo-form-card {
+        max-width: 760px;
+        margin: auto;
+        background: white;
+        border-radius: 12px;
+        padding: 28px;
+        box-shadow: 0 4px 14px rgba(0,0,0,.08);
+    }
+
+    .promo-form-title {
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 24px;
+        text-align: center;
+    }
+
+    .form-label {
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    .btn-guardar {
+        background: #2453a6;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 9px 22px;
+        font-weight: bold;
+    }
+
+    .btn-guardar:hover {
+        background: #1d478f;
+        color: white;
+    }
+
+    .btn-cancelar {
+        border-radius: 8px;
+        padding: 9px 22px;
+        font-weight: bold;
+    }
+
+    .descuento-box {
+        position: relative;
+    }
+
+    .descuento-box span {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #666;
+        font-weight: bold;
+    }
+
+    input[type="datetime-local"] {
+        width: 100%;
+    }
+</style>
+
+<div class="container-fluid px-4">
+
+    <div class="promo-form-card">
+
+        <h1 class="promo-form-title">
+            {{ titulo }}
+        </h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label">
+                    Nombre de la promoción
+                </label>
+
+                {{ form.nombre }}
+            </div>
+
+            <div class="row">
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">
+                        Fecha y hora de inicio
+                    </label>
+
+                    {{ form.fecha_inicio }}
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">
+                        Fecha y hora de fin
+                    </label>
+
+                    {{ form.fecha_fin }}
+                </div>
+
+            </div>
+
+            <div class="mb-3">
+
+                <label class="form-label">
+                    Porcentaje de descuento
+                </label>
+
+                <div class="descuento-box">
+                    {{ form.porcentaje_descuento }}
+                    <span>%</span>
+                </div>
+
+            </div>
+
+            <div class="form-check mb-4">
+
+                {{ form.activo }}
+
+                <label class="form-check-label ms-1">
+                    Promoción activa
+                </label>
+
+            </div>
+
+            <div class="d-flex gap-2">
+
+                <button class="btn-guardar">
+                    Guardar promoción
+                </button>
+
+                <a
+                    href="{% url 'inventario:promocion_list' %}"
+                    class="btn btn-secondary btn-cancelar"
+                >
+                    Cancelar
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}
