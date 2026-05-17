@@ -11,3 +11,9 @@ from .importar_productos_views import importar_productos_excel
 from .actualizar_productos_views import actualizar_productos_excel
 from .exportar_productos_views import preview_exportar_productos
 from .categoria_inventario_views import categoria_inventario_list
+from .baja_existencia_views import baja_existencia_list
+from .estado_inventario_views import estado_inventario
+from .exportar_inventario_views import exportar_baja_existencia_excel
+from .exportar_inventario_views import exportar_baja_existencia_pdf
+from .exportar_inventario_views import exportar_estado_inventario_excel
+from .exportar_inventario_views import exportar_estado_inventario_pdf

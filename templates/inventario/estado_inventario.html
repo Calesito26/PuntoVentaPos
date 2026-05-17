@@ -1,0 +1,251 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    Estado del inventario
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .page-title {
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+
+    .inventario-card {
+        background: white;
+        border-radius: 8px;
+        padding: 18px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.06);
+    }
+
+    .top-line,
+    .filter-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        margin-bottom: 14px;
+    }
+
+    .export-box {
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .export-box i {
+        font-size: 28px;
+        margin: 0 5px;
+    }
+
+    .tabla-estado {
+        font-size: 13px;
+    }
+
+    .tabla-estado th {
+        background: #e7e7e7;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #d8d8d8;
+        padding: 9px 6px;
+        font-weight: bold;
+    }
+
+    .tabla-estado td {
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #e1e1e1;
+        padding: 7px 6px;
+    }
+
+    .tabla-estado .nombre {
+        text-align: left;
+    }
+
+    .total-row {
+        font-weight: bold;
+        text-align: right;
+    }
+</style>
+
+<div class="container-fluid px-4">
+
+    <h1 class="page-title">
+        Estado del inventario
+    </h1>
+
+    <div class="top-line">
+
+        <div>
+            <label class="form-label mb-1">Por página</label>
+            <select class="form-select form-select-sm" style="width:90px;">
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+            </select>
+        </div>
+
+        <div class="export-box">
+            <div>Exportar</div>
+
+            <a href="{% url 'inventario:exportar_estado_inventario_excel' %}">
+                <i class="bi bi-file-earmark-excel text-success"></i>
+            </a>
+
+            <a href="{% url 'inventario:exportar_estado_inventario_pdf' %}">
+                <i class="bi bi-file-earmark-pdf text-danger"></i>
+            </a>
+        </div>
+
+    </div>
+
+    <div class="inventario-card">
+
+        <form method="get" class="filter-row">
+
+            <div>
+                <label class="fw-bold mb-1">Bodega</label>
+
+                <select
+                    name="sede"
+                    class="form-select form-select-sm"
+                    style="width: 270px;"
+                    onchange="this.form.submit();"
+                >
+                    <option value="">TODAS</option>
+
+                    {% for sede in sedes %}
+                        <option
+                            value="{{ sede.id }}"
+                            {% if sede_id == sede.id|stringformat:'s' %}selected{% endif %}
+                        >
+                            {{ sede.nombre|upper }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="d-flex gap-2">
+                <input
+                    type="text"
+                    name="buscar"
+                    value="{{ buscar }}"
+                    class="form-control form-control-sm"
+                    placeholder="Buscar por nombre o Cod. de barra"
+                    style="width: 270px;"
+                >
+
+                <button class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+
+        </form>
+
+        <div class="table-responsive">
+
+            <table class="table tabla-estado align-middle mb-0">
+
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Código de Barra</th>
+                        <th>Nombre</th>
+                        <th>Stock</th>
+                        <th>Valor de Compra</th>
+                        <th>Total Costo</th>
+                        <th>Valor de venta</th>
+                        <th>Total Venta</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for stock in stocks %}
+
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+
+                            <td>{{ stock.producto.codigo }}</td>
+
+                            <td class="nombre">
+                                {{ stock.producto.nombre }}
+                            </td>
+
+                            <td>{{ stock.stock|floatformat:0 }} Und</td>
+
+                            <td>{{ stock.producto.precio_compra }}</td>
+
+                            <td>{{ stock.total_costo }}</td>
+
+                            <td>{{ stock.producto.precio_venta }}</td>
+
+                            <td>{{ stock.total_venta }}</td>
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                No hay productos en inventario.
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                    <tr>
+                        <td colspan="6"></td>
+                        <td class="total-row">
+                            COSTO TOTAL INVENTARIO
+                        </td>
+                        <td class="fw-bold">
+                            {{ costo_total }}
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td colspan="6"></td>
+                        <td class="total-row">
+                            VENTA TOTAL INVENTARIO
+                        </td>
+                        <td class="fw-bold">
+                            {{ venta_total }}
+                        </td>
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+
+            <div>
+                Paginas: 1
+            </div>
+
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item disabled">
+                        <a class="page-link">«</a>
+                    </li>
+
+                    <li class="page-item active">
+                        <a class="page-link">1</a>
+                    </li>
+
+                    <li class="page-item disabled">
+                        <a class="page-link">»</a>
+                    </li>
+                </ul>
+            </nav>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

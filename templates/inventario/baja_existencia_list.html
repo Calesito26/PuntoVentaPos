@@ -1,0 +1,303 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    Lista de Productos de Baja Existencia
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .page-title {
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+
+    .inventario-card {
+        background: white;
+        border-radius: 8px;
+        padding: 18px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.06);
+    }
+
+    .top-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        margin-bottom: 10px;
+    }
+
+    .export-box {
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .export-box i {
+        font-size: 28px;
+        margin: 0 5px;
+    }
+
+    .filter-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        margin-bottom: 22px;
+    }
+
+    .tabla-baja {
+        font-size: 13px;
+    }
+
+    .tabla-baja th {
+        background: #e7e7e7;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #d8d8d8;
+        padding: 9px 6px;
+        font-weight: bold;
+    }
+
+    .tabla-baja td {
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #e1e1e1;
+        padding: 7px 6px;
+    }
+
+    .tabla-baja .nombre {
+        text-align: left;
+    }
+
+    .bodega-title {
+        background: #e7e7e7;
+        font-weight: bold;
+        padding: 8px;
+        border-radius: 8px 8px 0 0;
+        border: 1px solid #d8d8d8;
+    }
+
+    .estado-activo {
+        background: #5ba36a;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 12px;
+    }
+
+    .icon-ok {
+        color: #06164f;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .icon-no {
+        color: red;
+        font-size: 18px;
+        font-weight: bold;
+    }
+</style>
+
+<div class="container-fluid px-4">
+
+    <h1 class="page-title">
+        Lista de Productos de Baja Existencia
+    </h1>
+
+    <div class="top-line">
+
+        <div>
+            <label class="form-label mb-1">
+                Por página
+            </label>
+
+            <select class="form-select form-select-sm" style="width:90px;">
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+            </select>
+        </div>
+
+        <div class="export-box">
+            <div>Exportar</div>
+
+            <a href="{% url 'inventario:exportar_baja_existencia_excel' %}">
+                <i class="bi bi-file-earmark-excel text-success"></i>
+            </a>
+
+            <a href="{% url 'inventario:exportar_baja_existencia_pdf' %}">
+                <i class="bi bi-file-earmark-pdf text-danger"></i>
+            </a>
+        </div>
+
+    </div>
+
+    <div class="inventario-card">
+
+        <form method="get" class="filter-row">
+
+            <div>
+                <label class="fw-bold mb-1">
+                    Bodega
+                </label>
+
+                <select
+                    name="sede"
+                    class="form-select form-select-sm"
+                    style="width: 270px;"
+                    onchange="this.form.submit();"
+                >
+                    <option value="">TODAS</option>
+
+                    {% for sede in sedes %}
+                        <option
+                            value="{{ sede.id }}"
+                            {% if sede_id == sede.id|stringformat:'s' %}selected{% endif %}
+                        >
+                            {{ sede.nombre|upper }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="d-flex gap-2">
+                <input
+                    type="text"
+                    name="buscar"
+                    value="{{ buscar }}"
+                    class="form-control form-control-sm"
+                    placeholder="Buscar por nombre o código"
+                    style="width: 250px;"
+                >
+
+                <button class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+
+        </form>
+
+        {% regroup stocks by sede as sedes_group %}
+
+        {% for sede_group in sedes_group %}
+
+            <div class="mb-4">
+
+                <div class="bodega-title">
+                    {{ sede_group.grouper.nombre|upper }}
+                </div>
+
+                <div class="table-responsive">
+
+                    <table class="table tabla-baja align-middle mb-0">
+
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Código de Barra</th>
+                                <th>Nombre</th>
+                                <th>Stock</th>
+                                <th>Valor de Compra</th>
+                                <th>Valor de Venta</th>
+                                <th>Producto</th>
+                                <th>Insumo</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+
+                            {% for stock in sede_group.list %}
+
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+
+                                    <td>{{ stock.producto.codigo }}</td>
+
+                                    <td class="nombre">
+                                        {{ stock.producto.nombre }}
+                                    </td>
+
+                                    <td>
+                                        {{ stock.stock|floatformat:0 }} Und
+                                    </td>
+
+                                    <td>
+                                        {{ stock.producto.precio_compra }}
+                                    </td>
+
+                                    <td>
+                                        {{ stock.producto.precio_venta }}
+                                    </td>
+
+                                    <td>
+                                        <span class="icon-ok">✔</span>
+                                    </td>
+
+                                    <td>
+                                        {% if stock.producto.es_insumo %}
+                                            <span class="icon-ok">✔</span>
+                                        {% else %}
+                                            <span class="icon-no">✖</span>
+                                        {% endif %}
+                                    </td>
+
+                                    <td>
+                                        {% if stock.producto.activo %}
+                                            <span class="estado-activo">Activo</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Inactivo</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+
+                            {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+        {% empty %}
+
+            <div class="text-center py-5 text-muted">
+                No hay productos con baja existencia.
+            </div>
+
+        {% endfor %}
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+
+            <div>
+                Paginas: 1
+            </div>
+
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+
+                    <li class="page-item disabled">
+                        <a class="page-link">«</a>
+                    </li>
+
+                    <li class="page-item active">
+                        <a class="page-link">1</a>
+                    </li>
+
+                    <li class="page-item disabled">
+                        <a class="page-link">»</a>
+                    </li>
+
+                </ul>
+            </nav>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

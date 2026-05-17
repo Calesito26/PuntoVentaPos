@@ -21,6 +21,12 @@ from inventario.views.importar_exportar_categorias_views import importar_categor
 from inventario.views.importar_exportar_categorias_views import descargar_formato_categorias
 from inventario.views.importar_exportar_categorias_views import exportar_categorias_excel
 from inventario.views.importar_exportar_categorias_views import exportar_categorias_pdf
+from inventario.views.baja_existencia_views import baja_existencia_list
+from inventario.views.estado_inventario_views import estado_inventario
+from inventario.views.exportar_inventario_views import exportar_baja_existencia_excel
+from inventario.views.exportar_inventario_views import exportar_baja_existencia_pdf
+from inventario.views.exportar_inventario_views import exportar_estado_inventario_excel
+from inventario.views.exportar_inventario_views import exportar_estado_inventario_pdf
 
 app_name = 'inventario'
 
@@ -47,4 +53,10 @@ urlpatterns = [
     path('categorias/importar/formato/',descargar_formato_categorias,name='descargar_formato_categorias'),
     path('categorias/exportar/excel/',exportar_categorias_excel,name='exportar_categorias_excel'),
     path('categorias/exportar/pdf/',exportar_categorias_pdf,name='exportar_categorias_pdf'),
+    path('baja-existencia/',baja_existencia_list,name='baja_existencia_list'),
+    path('estado/',estado_inventario,name='estado_inventario'),
+    path('baja-existencia/exportar/excel/',exportar_baja_existencia_excel,name='exportar_baja_existencia_excel'),
+    path('baja-existencia/exportar/pdf/',exportar_baja_existencia_pdf,name='exportar_baja_existencia_pdf'),
+    path('estado/exportar/excel/',exportar_estado_inventario_excel,name='exportar_estado_inventario_excel'),
+    path('estado/exportar/pdf/',exportar_estado_inventario_pdf,name='exportar_estado_inventario_pdf'),
 ]

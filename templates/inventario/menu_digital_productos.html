@@ -198,7 +198,7 @@
                                 {{ stock.producto.nombre }}
                             </td>
 
-                            <td>{{ stock.stock }} Und</td>
+                            {{ stock.stock|floatformat:0 }} Und
 
                             <td>S/ {{ stock.producto.precio_compra|default:"0.00" }}</td>
 
