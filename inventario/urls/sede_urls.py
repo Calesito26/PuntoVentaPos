@@ -1,5 +1,4 @@
 from django.urls import path
-
 from inventario.views.sede_views import sede_create
 from inventario.views.sede_views import sede_delete
 from inventario.views.sede_views import sede_list
@@ -27,6 +26,12 @@ from inventario.views.exportar_inventario_views import exportar_baja_existencia_
 from inventario.views.exportar_inventario_views import exportar_baja_existencia_pdf
 from inventario.views.exportar_inventario_views import exportar_estado_inventario_excel
 from inventario.views.exportar_inventario_views import exportar_estado_inventario_pdf
+from inventario.views.traslado_views import traslado_list
+from inventario.views.traslado_views import traslado_create
+from inventario.views.exportar_traslado_views import exportar_traslado_excel
+from inventario.views.exportar_traslado_views import exportar_traslado_pdf
+from inventario.views.importar_traslado_views import importar_traslados_excel
+from inventario.views.importar_traslado_views import descargar_formato_traslados
 
 app_name = 'inventario'
 
@@ -59,4 +64,10 @@ urlpatterns = [
     path('baja-existencia/exportar/pdf/',exportar_baja_existencia_pdf,name='exportar_baja_existencia_pdf'),
     path('estado/exportar/excel/',exportar_estado_inventario_excel,name='exportar_estado_inventario_excel'),
     path('estado/exportar/pdf/',exportar_estado_inventario_pdf,name='exportar_estado_inventario_pdf'),
+    path('traslados/',traslado_list,name='traslado_list'),
+    path('traslados/nuevo/',traslado_create,name='traslado_create'),
+    path('traslados/exportar/excel/',exportar_traslado_excel,name='exportar_traslado_excel'),
+    path('traslados/exportar/pdf/',exportar_traslado_pdf,name='exportar_traslado_pdf'),
+    path('traslados/importar/',importar_traslados_excel,name='importar_traslados_excel'),
+    path('traslados/importar/formato/',descargar_formato_traslados,name='descargar_formato_traslados'),
 ]

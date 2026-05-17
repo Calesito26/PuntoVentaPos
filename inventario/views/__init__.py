@@ -17,3 +17,7 @@ from .exportar_inventario_views import exportar_baja_existencia_excel
 from .exportar_inventario_views import exportar_baja_existencia_pdf
 from .exportar_inventario_views import exportar_estado_inventario_excel
 from .exportar_inventario_views import exportar_estado_inventario_pdf
+from .traslado_views import traslado_list
+from .traslado_views import traslado_create
+from .exportar_traslado_views import exportar_traslado_excel
+from .exportar_traslado_views import exportar_traslado_pdf

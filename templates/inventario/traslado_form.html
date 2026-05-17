@@ -1,0 +1,83 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    {{ titulo }}
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .traslado-card {
+        max-width: 620px;
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        box-shadow: 0 4px 14px rgba(0,0,0,.08);
+    }
+
+    .traslado-card h1 {
+        font-size: 26px;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+</style>
+
+<div class="traslado-card">
+
+    <h1>
+        {{ titulo }}
+    </h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} py-2">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Bodega origen</label>
+            {{ form.sede_origen }}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Bodega destino</label>
+            {{ form.sede_destino }}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Producto</label>
+            {{ form.producto }}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Cantidad a trasladar</label>
+            {{ form.cantidad_traslado }}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Observación</label>
+            {{ form.observacion }}
+        </div>
+
+        <button class="btn btn-primary btn-sm">
+            Guardar traslado
+        </button>
+
+        <a
+            href="{% url 'inventario:traslado_list' %}"
+            class="btn btn-secondary btn-sm"
+        >
+            Cancelar
+        </a>
+
+    </form>
+
+</div>
+
+{% endblock %}

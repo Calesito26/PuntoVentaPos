@@ -1,0 +1,314 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+Historial Traslados Entre Bodegas
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .page-title{
+        text-align:center;
+        font-size:26px;
+        font-weight:700;
+        margin-bottom:15px;
+    }
+
+    .card-custom{
+        background:#fff;
+        border-radius:12px;
+        padding:18px;
+        box-shadow:0 2px 10px rgba(0,0,0,.06);
+    }
+
+    .table-custom{
+        font-size:14px;
+    }
+
+    .table-custom th{
+        background:#ececec;
+        border:1px solid #d8d8d8;
+        text-align:center;
+        vertical-align:middle;
+        padding:12px 8px;
+        font-weight:bold;
+    }
+
+    .table-custom td{
+        border:1px solid #e4e4e4;
+        vertical-align:middle;
+        text-align:center;
+        padding:8px;
+    }
+
+    .btn-nuevo{
+        background:#2453a6;
+        color:#fff;
+        border-radius:8px;
+        padding:7px 14px;
+        text-decoration:none;
+        font-weight:bold;
+        border:none;
+        font-size:14px;
+        white-space:nowrap;
+    }
+
+    .btn-nuevo:hover{
+        color:#fff;
+        background:#1f4690;
+    }
+
+    .export-box{
+        text-align:right;
+    }
+
+    .export-box i{
+        font-size:30px;
+    }
+
+    .estado-activo{
+        background:#5ba36a;
+        color:white;
+        padding:4px 12px;
+        border-radius:7px;
+        font-size:12px;
+        font-weight:600;
+    }
+
+    .empty-text{
+        font-size:20px;
+        color:#7d7d7d;
+        padding:25px;
+    }
+
+</style>
+
+<div class="container-fluid px-4">
+
+    <h1 class="page-title">
+        Historial Traslados Entre Bodegas
+    </h1>
+
+    <div class="d-flex justify-content-between mb-2">
+
+        <div>
+            <label class="form-label mb-1">
+                Por página
+            </label>
+
+            <select class="form-select form-select-sm" style="width:90px;">
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+            </select>
+        </div>
+
+        <div class="export-box">
+            <div>Exportar</div>
+
+            <a href="{% url 'inventario:exportar_traslado_excel' %}">
+                <i class="bi bi-file-earmark-excel text-success me-2"></i>
+            </a>
+
+            <a href="{% url 'inventario:exportar_traslado_pdf' %}">
+                <i class="bi bi-file-earmark-pdf text-danger"></i>
+            </a>
+        </div>
+
+    </div>
+
+    <div class="card-custom">
+
+        <form method="GET" class="mb-4">
+
+            <div class="row align-items-end g-3">
+
+                <div class="col-md-2">
+                    <label class="fw-bold">Fecha Inicial</label>
+                    <input
+                        type="date"
+                        name="fecha_inicio"
+                        class="form-control form-control-sm"
+                    >
+                </div>
+
+                <div class="col-md-2">
+                    <label class="fw-bold">Fecha Final</label>
+                    <input
+                        type="date"
+                        name="fecha_fin"
+                        class="form-control form-control-sm"
+                    >
+                </div>
+
+                <div class="col-md-3">
+                    <label class="fw-bold">Bodega</label>
+                    <select name="sede" class="form-select form-select-sm">
+                        <option value="">TODAS</option>
+                        {% for sede in sedes %}
+                            <option
+                                value="{{ sede.id }}"
+                                {% if sede_id == sede.id|stringformat:'s' %}selected{% endif %}
+                            >
+                                {{ sede.nombre|upper }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                        Consultar
+                    </button>
+                </div>
+
+                <div class="col-md-1 text-center">
+                    <a
+                        href="{% url 'inventario:importar_traslados_excel' %}"
+                        class="text-decoration-none"
+                        style="color:#0d57a4;"
+                    >
+                        <div style="line-height:14px;">
+                            Importar<br>Traslados
+                        </div>
+                        <i class="bi bi-cloud-arrow-up" style="font-size:32px;"></i>
+                    </a>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="d-flex gap-2 justify-content-end">
+                        <input
+                            type="text"
+                            name="buscar"
+                            value="{{ buscar }}"
+                            class="form-control form-control-sm"
+                            placeholder="Buscar por nombre o cod barra"
+                            style="max-width:220px;"
+                        >
+
+                        <button class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-search"></i>
+                        </button>
+
+                        <a
+                            href="{% url 'inventario:traslado_create' %}"
+                            class="btn-nuevo"
+                        >
+                            Nuevo traslado
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+
+        </form>
+
+        <div class="table-responsive">
+
+            <table class="table table-custom align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Cod Traslado</th>
+                        <th>Fecha y Hora</th>
+                        <th>Bodega Origen</th>
+                        <th>Bodega Destino</th>
+                        <th>Producto</th>
+                        <th>Cantidad Actual</th>
+                        <th>Cantidad Traslado</th>
+                        <th>Cantidad Final</th>
+                        <th>Valor del Traslado</th>
+                        <th>Responsable</th>
+                        <th>Observación</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for traslado in traslados %}
+
+                    <tr>
+
+                        <td>
+                            {{ forloop.counter }}
+                        </td>
+
+                        <td>
+                            {{ traslado.codigo }}
+                        </td>
+
+                        <td>
+                            {{ traslado.created|date:"d/m/Y H:i" }}
+                        </td>
+
+                        <td>
+                            {{ traslado.sede_origen.nombre }}
+                        </td>
+
+                        <td>
+                            {{ traslado.sede_destino.nombre }}
+                        </td>
+
+                        <td class="text-start">
+                            {{ traslado.producto.nombre }}
+                        </td>
+
+                        <td>
+                            {{ traslado.cantidad_actual|floatformat:0 }}
+                        </td>
+
+                        <td>
+                            {{ traslado.cantidad_traslado|floatformat:0 }}
+                        </td>
+
+                        <td>
+                            {{ traslado.cantidad_final|floatformat:0 }}
+                        </td>
+
+                        <td>
+                            S/ {{ traslado.valor_traslado }}
+                        </td>
+
+                        <td>
+                            {{ traslado.responsable }}
+                        </td>
+
+                        <td>
+                            {{ traslado.observacion|default:"-" }}
+                        </td>
+
+                        <td>
+                            <span class="estado-activo">
+                                Realizado
+                            </span>
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="13" class="empty-text text-center">
+                            No hay registros
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <div class="mt-3">
+            Paginas: 1
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
