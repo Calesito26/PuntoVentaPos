@@ -1,0 +1,332 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    Seguimiento de productos
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .page-title {
+        text-align: center;
+        font-size: 26px;
+        font-weight: bold;
+        margin-bottom: 18px;
+    }
+
+    .seguimiento-card {
+        background: white;
+        border-radius: 10px;
+        padding: 18px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.06);
+    }
+
+    .export-box {
+        text-align: right;
+        font-size: 14px;
+    }
+
+    .export-box i {
+        font-size: 28px;
+        margin: 0 5px;
+    }
+
+    .tabla-seguimiento {
+        font-size: 13px;
+    }
+
+    .tabla-seguimiento th {
+        background: #e7e7e7;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #d8d8d8;
+        padding: 10px 6px;
+        font-weight: bold;
+    }
+
+    .tabla-seguimiento td {
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #e1e1e1;
+        padding: 7px 6px;
+    }
+
+    .estado-activo {
+        background: #5ba36a;
+        color: white;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 12px;
+    }
+
+    .badge-entrada {
+        background: #198754;
+        color: white;
+        padding: 4px 9px;
+        border-radius: 6px;
+        font-size: 12px;
+    }
+
+    .badge-salida {
+        background: #dc3545;
+        color: white;
+        padding: 4px 9px;
+        border-radius: 6px;
+        font-size: 12px;
+    }
+
+    .badge-traslado {
+        background: #2453a6;
+        color: white;
+        padding: 4px 9px;
+        border-radius: 6px;
+        font-size: 12px;
+    }
+</style>
+
+<div class="container-fluid px-4">
+
+    <h1 class="page-title">
+        Seguimiento de productos
+    </h1>
+
+    <div class="d-flex justify-content-between align-items-end mb-3">
+
+        <div>
+            <label class="form-label mb-1">
+                Por página
+            </label>
+
+            <select class="form-select form-select-sm" style="width:90px;">
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+            </select>
+        </div>
+
+        <div class="export-box">
+            <div>Exportar</div>
+
+            <a href="{% url 'inventario:exportar_seguimiento_excel' %}?sede={{ sede_id }}&buscar={{ buscar }}">
+                <i class="bi bi-file-earmark-excel text-success"></i>
+            </a>
+
+            <a href="{% url 'inventario:exportar_seguimiento_pdf' %}?sede={{ sede_id }}&buscar={{ buscar }}">
+                <i class="bi bi-file-earmark-pdf text-danger"></i>
+            </a>
+        </div>
+
+    </div>
+
+    <div class="seguimiento-card">
+
+        <form method="get" class="row align-items-end g-3 mb-4">
+
+            <div class="col-md-3">
+                <label class="fw-bold">
+                    Bodega
+                </label>
+
+                <select name="sede" class="form-select form-select-sm">
+                    <option value="">TODAS</option>
+
+                    {% for sede in sedes %}
+                        <option
+                            value="{{ sede.id }}"
+                            {% if sede_id == sede.id|stringformat:'s' %}selected{% endif %}
+                        >
+                            {{ sede.nombre|upper }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-6"></div>
+
+            <div class="col-md-3">
+                <div class="d-flex gap-2 justify-content-end">
+
+                    <input
+                        type="text"
+                        name="buscar"
+                        value="{{ buscar }}"
+                        class="form-control form-control-sm"
+                        placeholder="Buscar por nombre o cod barra"
+                    >
+
+                    <button class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-search"></i>
+                    </button>
+
+                </div>
+            </div>
+
+        </form>
+
+        <h5 class="fw-bold mb-3">
+            Stock actual por bodega
+        </h5>
+
+        <div class="table-responsive mb-4">
+
+            <table class="table tabla-seguimiento align-middle mb-0">
+
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Código de Barra</th>
+                        <th>Producto</th>
+                        <th>Bodega</th>
+                        <th>Stock Actual</th>
+                        <th>Stock Mínimo</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for stock in stocks %}
+
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+
+                            <td>{{ stock.producto.codigo }}</td>
+
+                            <td class="text-start">
+                                {{ stock.producto.nombre }}
+                            </td>
+
+                            <td>{{ stock.sede.nombre }}</td>
+
+                            <td>{{ stock.stock|floatformat:0 }} Und</td>
+
+                            <td>{{ stock.stock_minimo|floatformat:0 }}</td>
+
+                            <td>
+                                {% if stock.activo %}
+                                    <span class="estado-activo">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactivo</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                No hay stock registrado.
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <h5 class="fw-bold mb-3">
+            Historial de movimientos
+        </h5>
+
+        <div class="table-responsive">
+
+            <table class="table tabla-seguimiento align-middle mb-0">
+
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Fecha y Hora</th>
+                        <th>Código Movimiento</th>
+                        <th>Producto</th>
+                        <th>Origen</th>
+                        <th>Destino</th>
+                        <th>Tipo</th>
+                        <th>Cantidad</th>
+                        <th>Responsable</th>
+                        <th>Observación</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for traslado in traslados %}
+
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+
+                            <td>{{ traslado.created|date:"d/m/Y H:i" }}</td>
+
+                            <td>{{ traslado.codigo }}</td>
+
+                            <td class="text-start">
+                                {{ traslado.producto.nombre }}
+                            </td>
+
+                            <td>{{ traslado.sede_origen.nombre }}</td>
+
+                            <td>{{ traslado.sede_destino.nombre }}</td>
+
+                            <td>
+                                <span class="badge-traslado">Traslado</span>
+                            </td>
+
+                            <td>{{ traslado.cantidad_traslado|floatformat:0 }}</td>
+
+                            <td>
+                                {{ traslado.responsable.username|default:"-" }}
+                            </td>
+
+                            <td>
+                                {{ traslado.observacion|default:"-" }}
+                            </td>
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+                            <td colspan="10" class="text-center py-4 text-muted">
+                                No hay movimientos registrados.
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+
+            <div>
+                Paginas: 1
+            </div>
+
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item disabled">
+                        <a class="page-link">«</a>
+                    </li>
+
+                    <li class="page-item active">
+                        <a class="page-link">1</a>
+                    </li>
+
+                    <li class="page-item disabled">
+                        <a class="page-link">»</a>
+                    </li>
+                </ul>
+            </nav>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

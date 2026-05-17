@@ -40,6 +40,9 @@ from inventario.views.promocion_views import promocion_create
 from inventario.views.promocion_views import promocion_update
 from inventario.views.exportar_promocion_views import exportar_promociones_excel
 from inventario.views.exportar_promocion_views import exportar_promociones_pdf
+from inventario.views.seguimiento_producto_views import seguimiento_producto_list
+from inventario.views.exportar_seguimiento_views import exportar_seguimiento_excel
+from inventario.views.exportar_seguimiento_views import exportar_seguimiento_pdf
 
 app_name = 'inventario'
 
@@ -86,4 +89,7 @@ urlpatterns = [
     path('promociones/editar/<int:pk>/',promocion_update,name='promocion_update'),
     path('promociones/exportar/excel/',exportar_promociones_excel,name='exportar_promociones_excel'),
     path('promociones/exportar/pdf/',exportar_promociones_pdf,name='exportar_promociones_pdf'),
+    path('seguimiento-productos/',seguimiento_producto_list,name='seguimiento_producto_list'),
+    path('seguimiento-productos/exportar/excel/',exportar_seguimiento_excel,name='exportar_seguimiento_excel'),
+    path('seguimiento-productos/exportar/pdf/',exportar_seguimiento_pdf,name='exportar_seguimiento_pdf'),
 ]

@@ -25,3 +25,4 @@ from .inventario_categoria_views import inventario_categoria_list
 from .promocion_views import promocion_list
 from .promocion_views import promocion_create
 from .promocion_views import promocion_update
+from .seguimiento_producto_views import seguimiento_producto_list
