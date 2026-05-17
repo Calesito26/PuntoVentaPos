@@ -32,6 +32,9 @@ from inventario.views.exportar_traslado_views import exportar_traslado_excel
 from inventario.views.exportar_traslado_views import exportar_traslado_pdf
 from inventario.views.importar_traslado_views import importar_traslados_excel
 from inventario.views.importar_traslado_views import descargar_formato_traslados
+from inventario.views.inventario_categoria_views import inventario_categoria_list
+from inventario.views.exportar_inventario_categoria_views import exportar_inventario_categoria_excel
+from inventario.views.exportar_inventario_categoria_views import exportar_inventario_categoria_pdf
 
 app_name = 'inventario'
 
@@ -70,4 +73,7 @@ urlpatterns = [
     path('traslados/exportar/pdf/',exportar_traslado_pdf,name='exportar_traslado_pdf'),
     path('traslados/importar/',importar_traslados_excel,name='importar_traslados_excel'),
     path('traslados/importar/formato/',descargar_formato_traslados,name='descargar_formato_traslados'),
+    path('inventario-categorias/',inventario_categoria_list,name='inventario_categoria_list'),
+    path('inventario-categorias/exportar/excel/',exportar_inventario_categoria_excel,name='exportar_inventario_categoria_excel'),
+    path('inventario-categorias/exportar/pdf/',exportar_inventario_categoria_pdf,name='exportar_inventario_categoria_pdf'),
 ]

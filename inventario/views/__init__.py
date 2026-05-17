@@ -21,3 +21,4 @@ from .traslado_views import traslado_list
 from .traslado_views import traslado_create
 from .exportar_traslado_views import exportar_traslado_excel
 from .exportar_traslado_views import exportar_traslado_pdf
+from .inventario_categoria_views import inventario_categoria_list
