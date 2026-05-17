@@ -1,0 +1,1 @@
+from .usuario_urls import urlpatterns

@@ -1,0 +1,126 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    {{ titulo }}
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .stock-form-card {
+        max-width: 620px;
+        background: white;
+        border-radius: 14px;
+        padding: 22px 26px;
+        box-shadow: 0 4px 14px rgba(0,0,0,.07);
+    }
+
+    .stock-form-card h1 {
+        font-size: 26px;
+        font-weight: bold;
+        margin-bottom: 18px;
+    }
+
+    .stock-form-card label {
+        font-size: 14px;
+        margin-bottom: 4px;
+    }
+
+    .stock-form-card .mb-3 {
+        margin-bottom: 12px !important;
+    }
+
+    .stock-form-card textarea {
+        resize: vertical;
+    }
+</style>
+
+<div class="stock-form-card">
+
+    <h1>
+        {{ titulo }}
+    </h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} py-2">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Nombre del producto</label>
+            {{ form.nombre }}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Categoría</label>
+            {{ form.categoria }}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Descripción</label>
+            {{ form.descripcion }}
+        </div>
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Valor de compra</label>
+                {{ form.precio_compra }}
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Valor de venta</label>
+                {{ form.precio_venta }}
+            </div>
+
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">URL de imagen</label>
+            {{ form.imagen_url }}
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">Bodega</label>
+            {{ form.sede }}
+        </div>
+
+        <div class="row">
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Stock inicial</label>
+                {{ form.stock }}
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Stock mínimo</label>
+                {{ form.stock_minimo }}
+            </div>
+
+        </div>
+
+        <div class="form-check mb-3">
+            {{ form.activo }}
+            <label class="form-check-label">Activo</label>
+        </div>
+
+        <button class="btn btn-primary btn-sm">
+            Guardar
+        </button>
+
+        <a href="{% url 'inventario:inventario_producto_list' %}" class="btn btn-secondary btn-sm">
+            Cancelar
+        </a>
+
+    </form>
+
+</div>
+
+{% endblock %}

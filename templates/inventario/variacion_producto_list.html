@@ -1,0 +1,204 @@
+{% extends 'base/base.html' %}
+{% block title %}
+    Productos con variaciones
+{% endblock %}
+{% block content %}
+<style>
+    .page-title {
+        text-align: center;
+        font-size: 26px;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+    .variacion-card {
+        background: white;
+        border-radius: 10px;
+        padding: 18px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.06);
+    }
+    .tabla-variacion {
+        font-size: 14px;
+    }
+    .tabla-variacion th {
+        background: #e7e7e7;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #d8d8d8;
+        padding: 12px 8px;
+        font-weight: bold;
+    }
+    .tabla-variacion td {
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #e1e1e1;
+        padding: 8px;
+    }
+    .estado-activo {
+        background: #5ba36a;
+        color: white;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 12px;
+    }
+    .action-icon {
+        font-size: 20px;
+        margin: 0 4px;
+        text-decoration: none;
+    }
+    .edit-icon { color: #333; }
+    .delete-icon { color: red; }
+    .btn-nuevo {
+        background: #2453a6;
+        color: white;
+        border-radius: 8px;
+        padding: 7px 16px;
+        text-decoration: none;
+        font-weight: bold;
+        font-size: 14px;
+        white-space: nowrap;
+    }
+    .btn-nuevo:hover {
+        color: white;
+        background: #1d478f;
+    }
+    .export-area {
+        text-align: right;
+    }
+    .export-area .bi {
+        font-size: 1.6rem;
+        cursor: pointer;
+    }
+</style>
+
+<div class="container-fluid px-4">
+
+    <h1 class="page-title">Productos con variaciones</h1>
+
+    <div class="d-flex justify-content-between align-items-end mb-3">
+        <div>
+            <label class="form-label mb-1">Por página</label>
+            <select class="form-select form-select-sm" style="width:90px;">
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+            </select>
+        </div>
+        <div class="export-area">
+            <div class="mb-1 text-end">Exportar</div>
+            
+            <a href="{% url 'inventario:preview_exportar_productos' %}">
+                <i class="bi bi-file-earmark-excel text-success me-2"></i>
+            </a>
+
+            <a href="{% url 'inventario:preview_exportar_productos' %}">
+                <i class="bi bi-file-earmark-pdf text-danger"></i>
+            </a>
+        
+        </div>
+    </div>
+
+    <div class="variacion-card">
+
+        <form method="get" class="row align-items-end mb-4 g-2">
+            <div class="col-md-3">
+                <label class="fw-bold mb-1">Categoría</label>
+                <select name="categoria" class="form-select form-select-sm"
+                        onchange="this.form.submit();">
+                    <option value="">TODOS</option>
+                    {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}"
+                            {% if categoria_id == categoria.id|stringformat:'s' %}selected{% endif %}>
+                            {{ categoria.nombre|upper }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-3"></div>
+
+            <div class="col-md-6">
+                <div class="d-flex gap-2 justify-content-end">
+                    <input type="text" name="buscar" value="{{ buscar }}"
+                           class="form-control form-control-sm"
+                           placeholder="Buscar por nombre"
+                           style="max-width: 220px;">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm px-2">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    <a href="{% url 'inventario:stock_bodega_create' %}" class="btn-nuevo">
+                        Nuevo Producto Con Variación
+                    </a>
+                </div>
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table tabla-variacion align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Categoría</th>
+                        <th>Nombre</th>
+                        <th>Descripción</th>
+                        <th>Valor de Compra</th>
+                        <th>Valor de Venta</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for stock in stocks %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ stock.producto.categoria.nombre|default:"SIN CATEGORÍA" }}</td>
+                        <td class="text-start">{{ stock.producto.nombre }}</td>
+                        <td>{{ stock.producto.descripcion|default:"" }}</td>
+                        <td>S/ {{ stock.producto.precio_compra|default:"0.00" }}</td>
+                        <td>S/ {{ stock.producto.precio_venta }}</td>
+                        <td>
+                            {% if stock.producto.activo %}
+                                <span class="estado-activo">Activo</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'inventario:stock_bodega_update' stock.id %}"
+                               class="action-icon edit-icon">
+                                <i class="bi bi-pencil-square"></i>
+                            </a>
+                            <a
+                                href="{% url 'inventario:stock_bodega_delete' stock.id %}"
+                                class="action-icon delete-icon"
+                                onclick="return confirm('¿Seguro que deseas eliminar este producto?');"
+                            >
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            No hay productos con variaciones.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div>Paginas: 1</div>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item disabled"><a class="page-link">«</a></li>
+                    <li class="page-item active"><a class="page-link">1</a></li>
+                    <li class="page-item disabled"><a class="page-link">»</a></li>
+                </ul>
+            </nav>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

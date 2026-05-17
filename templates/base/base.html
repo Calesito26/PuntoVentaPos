@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="es">
+{% load usuarios_tags %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}PuntoVentaPOS{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f4f7fb;
+            font-family: Arial, sans-serif;
+        }
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+        .sidebar {
+            width: 92px;
+            background: #23539b;
+            color: white;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1000;
+        }
+        .brand {
+            height: 74px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255,255,255,.2);
+        }
+        .brand i {
+            font-size: 26px;
+        }
+        .menu-item {
+            height: 76px;
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            border-bottom: 1px solid rgba(255,255,255,.15);
+            font-size: 13px;
+        }
+        .menu-item i {
+            font-size: 28px;
+            margin-bottom: 4px;
+        }
+        .menu-item:hover,
+        .menu-item.active {
+            background: #3f73c7;
+            color: white;
+        }
+        .main-content {
+            margin-left: 92px;
+            width: calc(100% - 92px);
+        }
+        .topbar {
+            height: 58px;
+            background: #23539b;
+            color: white;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 0 24px;
+            gap: 24px;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+        .topbar i {
+            font-size: 24px;
+        }
+        .content-wrapper {
+            padding: 28px;
+        }
+        .page-card {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 4px 16px rgba(0,0,0,.08);
+            padding: 24px;
+        }
+        .btn-primary {
+            background: #23539b;
+            border-color: #23539b;
+        }
+        .btn-primary:hover {
+            background: #1d4785;
+            border-color: #1d4785;
+        }
+        .menu-dropdown {
+            position: relative;
+        }
+        .submenu-inventario {
+            position: absolute;
+            left: 92px;
+            top: 0;
+            width: 240px;
+            min-height: 100vh;
+            background: #416db4;
+            display: none;
+            flex-direction: column;
+            padding-top: 12px;
+            z-index: 3000;
+        }
+        .menu-dropdown:hover .submenu-inventario {
+            display: flex;
+        }
+        .submenu-item {
+            color: white;
+            text-decoration: none;
+            padding: 11px 16px;
+            font-size: 15px;
+        }
+        .submenu-item:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: white;
+        }
+    </style>
+    {% block css %}{% endblock %}
+</head>
+<body>
+<div class="app-layout">
+    <aside class="sidebar">
+        <div class="brand">
+            <i class="bi bi-shop"></i>
+            <span>POS</span>
+            {% if request.user.is_authenticated %}
+                <small style="font-size: 10px; margin-top: 4px;">
+                    {{ request.user.username|upper }}
+                </small>
+            {% endif %}
+        </div>
+        <a href="{% url 'home' %}" class="menu-item">
+            <i class="bi bi-bar-chart-line"></i>
+            Inicio
+        </a>
+        <a href="{% url 'ventas:pos_venta' %}" class="menu-item">
+            <i class="bi bi-cart3"></i>
+            Vender
+        </a>
+        <div class="menu-dropdown">
+            <div class="menu-item">
+                <i class="bi bi-box-seam"></i>
+                Inventario
+            </div>
+            <div class="submenu-inventario">
+                <a href="{% url 'inventario:sede_list' %}" class="submenu-item">Bodegas</a>
+                <a href="{% url 'inventario:categoria_inventario_list' %}" class="submenu-item">Categorías</a>
+                <a href="{% url 'inventario:inventario_producto_list' %}" class="submenu-item">Productos</a>
+                <a href="#" class="submenu-item">Baja existencias</a>
+                <a href="#" class="submenu-item">Inventario</a>
+                <a href="{% url 'inventario:stock_bodega_create' %}" class="submenu-item">Ajustes de inventario</a>
+                <a href="#" class="submenu-item">Traslados entre bodegas</a>
+                <a href="#" class="submenu-item">Inventario categorías</a>
+                <a href="#" class="submenu-item">Promociones</a>
+                <a href="#" class="submenu-item">Producción</a>
+                <a href="#" class="submenu-item">Seguimiento de productos</a>
+            </div>
+        </div>
+        <a href="{% url 'clientes:cliente_list' %}" class="menu-item">
+            <i class="bi bi-people"></i>
+            Clientes
+        </a>
+        {% if request.user.is_superuser or request.user|has_group:"Administrador" %}
+            <a href="{% url 'usuarios:usuario_list' %}" class="menu-item">
+                <i class="bi bi-person-gear"></i>
+                Usuarios
+            </a>
+        {% endif %}
+        <a href="#" class="menu-item">
+            <i class="bi bi-robot"></i>
+            IA
+        </a>
+        <a href="#" class="menu-item">
+            <i class="bi bi-gear"></i>
+            Config
+        </a>
+    </aside>
+    <main class="main-content">
+        <div class="topbar">
+            <i class="bi bi-bell"></i>
+            <div class="dropdown">
+                <a href="#" class="text-white text-decoration-none" data-bs-toggle="dropdown"><i class="bi bi-person-circle"></i></a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    {% if request.user.is_authenticated %}
+                        <li>
+                            <span class="dropdown-item-text fw-bold">
+                                {{ request.user.username|upper }}
+                            </span>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'password_change' %}">Cambiar contraseña</a>
+                        </li>
+                        <li>
+                            <form method="post" action="{% url 'logout' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item text-danger">Cerrar sesión</button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li>
+                            <a class="dropdown-item" href="{% url 'login' %}">Iniciar sesión</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+        <div class="content-wrapper">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% block js %}{% endblock %}
+</body>
+</html>

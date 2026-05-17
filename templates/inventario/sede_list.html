@@ -1,0 +1,277 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    Lista de bodegas
+{% endblock %}
+
+{% block content %}
+
+<style>
+
+    .bodega-card{
+        background: white;
+        border-radius: 18px;
+        padding: 18px;
+        box-shadow: 0 4px 14px rgba(0,0,0,.06);
+    }
+
+    .table-custom{
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .table-custom thead{
+        background: #ececec;
+    }
+
+    .table-custom th{
+        padding: 16px;
+        font-size: 16px;
+        font-weight: 700;
+        text-align: center;
+        border: 1px solid #dcdcdc;
+    }
+
+    .table-custom td{
+        padding: 14px;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #e6e6e6;
+    }
+
+    .estado-badge{
+        background: #59a96a;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: bold;
+    }
+
+    .btn-edit{
+        color: #3d3d3d;
+        font-size: 22px;
+        text-decoration: none;
+    }
+
+    .btn-delete{
+        color: #e53935;
+        font-size: 22px;
+        text-decoration: none;
+    }
+
+    .top-actions{
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 22px;
+    }
+
+    .search-box{
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .search-input{
+        width: 240px;
+        border-radius: 12px;
+        border: 1px solid #d7d7d7;
+        padding: 10px 14px;
+    }
+
+    .btn-nueva{
+        background: #2453a6;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 10px 22px;
+        font-weight: bold;
+        text-decoration: none;
+    }
+
+    .btn-nueva:hover{
+        background: #1d478f;
+        color: white;
+    }
+
+</style>
+
+<div class="container-fluid">
+
+    <h1 class="text-center fw-bold mb-5">
+        Lista de bodegas
+    </h1>
+
+    <div class="bodega-card">
+
+        <div class="top-actions">
+
+            <div>
+
+                <label class="mb-2">
+                    Por página
+                </label>
+
+                <select class="form-select" style="width:100px;">
+                    <option>10</option>
+                    <option>25</option>
+                    <option>50</option>
+                </select>
+
+            </div>
+
+            <div class="search-box">
+
+                <input
+                    type="text"
+                    class="search-input"
+                    placeholder="Buscar por nombre"
+                >
+
+                <i class="bi bi-search fs-3"></i>
+
+                <a
+                    href="{% url 'inventario:sede_create' %}"
+                    class="btn-nueva"
+                >
+                    Nueva Bodega
+                </a>
+
+            </div>
+
+        </div>
+
+        <div class="table-responsive">
+
+            <table class="table table-custom align-middle">
+
+                <thead>
+
+                    <tr>
+
+                        <th>Item</th>
+                        <th>ID Bodega</th>
+                        <th>Nombre</th>
+                        <th>Dirección</th>
+                        <th>Descripción</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for sede in sedes %}
+
+                        <tr>
+
+                            <td>
+                                {{ forloop.counter }}
+                            </td>
+
+                            <td>
+                                {{ sede.id }}
+                            </td>
+
+                            <td>
+                                {{ sede.nombre }}
+                            </td>
+
+                            <td>
+                                {{ sede.direccion }}
+                            </td>
+
+                            <td>
+                                {{ sede.descripcion }}
+                            </td>
+
+                            <td>
+
+                                {% if sede.activo %}
+
+                                    <span class="estado-badge">
+                                        Activo
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-danger">
+                                        Inactivo
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                <a
+                                    href="{% url 'inventario:sede_update' sede.id %}"
+                                    class="btn-edit"
+                                >
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+
+                                <a
+                                    href="{% url 'inventario:sede_delete' sede.id %}"
+                                    class="btn-delete"
+                                >
+                                    <i class="bi bi-trash"></i>
+                                </a>
+
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td colspan="7" class="text-center py-5">
+
+                                No hay bodegas registradas
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <div class="d-flex justify-content-center mt-4">
+
+            <nav>
+
+                <ul class="pagination">
+
+                    <li class="page-item disabled">
+                        <a class="page-link">«</a>
+                    </li>
+
+                    <li class="page-item active">
+                        <a class="page-link">1</a>
+                    </li>
+
+                    <li class="page-item disabled">
+                        <a class="page-link">»</a>
+                    </li>
+
+                </ul>
+
+            </nav>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    {{ titulo }}
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .categoria-form-card {
+        max-width: 560px;
+        background: white;
+        border-radius: 14px;
+        padding: 24px 28px;
+        box-shadow: 0 4px 14px rgba(0,0,0,.07);
+    }
+
+    .categoria-form-card h1 {
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    .categoria-form-card label {
+        font-size: 14px;
+        margin-bottom: 4px;
+    }
+</style>
+
+<div class="categoria-form-card">
+
+    <h1>
+        {{ titulo }}
+    </h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} py-2">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label fw-bold">
+                Nombre de la categoría
+            </label>
+            {{ form.nombre }}
+        </div>
+
+        <div class="form-check mb-3">
+            {{ form.activo }}
+            <label class="form-check-label">
+                Activo
+            </label>
+        </div>
+
+        <button class="btn btn-primary btn-sm">
+            Guardar
+        </button>
+
+        <a
+            href="{% url 'inventario:categoria_inventario_list' %}"
+            class="btn btn-secondary btn-sm"
+        >
+            Cancelar
+        </a>
+
+    </form>
+
+</div>
+
+{% endblock %}

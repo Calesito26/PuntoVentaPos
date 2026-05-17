@@ -1,0 +1,125 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    {{ titulo }}
+{% endblock %}
+
+{% block content %}
+
+<style>
+
+    .form-card{
+        max-width: 850px;
+        margin: auto;
+        background: white;
+        border-radius: 18px;
+        padding: 34px;
+        box-shadow: 0 4px 14px rgba(0,0,0,.06);
+    }
+
+    .form-title{
+        font-size: 42px;
+        font-weight: bold;
+        margin-bottom: 26px;
+    }
+
+    .btn-save{
+        background: #2453a6;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        padding: 10px 24px;
+        font-weight: bold;
+    }
+
+    .btn-save:hover{
+        background: #1d478f;
+        color: white;
+    }
+
+    .btn-cancel{
+        background: #707780;
+        color: white;
+        border-radius: 10px;
+        padding: 10px 24px;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .btn-cancel:hover{
+        background: #5f666f;
+        color: white;
+    }
+
+</style>
+
+<div class="container-fluid">
+
+    <div class="form-card">
+
+        <h1 class="form-title">
+            {{ titulo }}
+        </h1>
+
+        <form method="post">
+
+            {% csrf_token %}
+
+            <div class="mb-4">
+
+                <label class="form-label fw-bold">
+                    Nombre
+                </label>
+
+                {{ form.nombre }}
+
+            </div>
+
+            <div class="mb-4">
+
+                <label class="form-label fw-bold">
+                    Dirección
+                </label>
+
+                {{ form.direccion }}
+
+            </div>
+
+            <div class="mb-4">
+
+                <label class="form-label fw-bold">
+                    Descripción
+                </label>
+
+                {{ form.descripcion }}
+
+            </div>
+
+            <div class="form-check mb-4">
+
+                {{ form.activo }}
+
+                <label class="form-check-label fw-bold">
+                    Activo
+                </label>
+
+            </div>
+
+            <button type="submit" class="btn-save">
+                Guardar
+            </button>
+
+            <a
+                href="{% url 'inventario:sede_list' %}"
+                class="btn-cancel"
+            >
+                Cancelar
+            </a>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

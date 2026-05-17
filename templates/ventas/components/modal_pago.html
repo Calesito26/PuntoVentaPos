@@ -1,0 +1,251 @@
+<div
+    class="modal fade"
+    id="modalPago"
+    tabindex="-1"
+    aria-hidden="true"
+><div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+
+            <!-- HEADER -->
+            <div
+                class="modal-header border-0 text-white"
+                style="background: #1e5aa8;"
+            >
+                <h2 class="modal-title fw-bold">
+                    Información de pago
+                </h2>
+
+                <button
+                    type="button"
+                    class="btn-close btn-close-white"
+                    data-bs-dismiss="modal"
+                ></button>
+            </div>
+
+            <!-- BODY -->
+            <div class="modal-body p-4">
+
+                <div class="row">
+
+                    <!-- IZQUIERDA -->
+                    <div class="col-lg-6">
+
+                        <!-- CLIENTE -->
+                        <div class="mb-4">
+
+                            <label class="form-label fw-bold">
+                                Cliente
+                            </label>
+
+                            <select
+                                class="form-select form-select-lg"
+                            >
+                                <option>
+                                    Cliente general
+                                </option>
+                            </select>
+
+                        </div>
+
+                        <!-- OPCIONES -->
+                        <div
+                            class="p-3 rounded mb-3"
+                            style="background: #eef4ff;"
+                        >
+                            <div class="form-check">
+
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                >
+
+                                <label class="form-check-label fw-bold">
+                                    Cortesía
+                                </label>
+
+                            </div>
+
+                            <small class="text-muted">
+                                Esta opción se usa para obsequiar el pedido
+                            </small>
+                        </div>
+
+                        <div
+                            class="p-3 rounded mb-3"
+                            style="background: #eef4ff;"
+                        >
+                            <div class="form-check">
+
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                >
+
+                                <label class="form-check-label fw-bold">
+                                    Servicio voluntario
+                                </label>
+
+                            </div>
+                        </div>
+
+                        <div
+                            class="p-3 rounded"
+                            style="background: #eef4ff;"
+                        >
+                            <div class="form-check">
+
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                >
+
+                                <label class="form-check-label fw-bold">
+                                    Envío a domicilio
+                                </label>
+
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- DERECHA -->
+                    <div class="col-lg-6">
+
+                        <!-- BOTON CREAR CLIENTE -->
+                        <button
+                            class="btn w-100 text-white fw-bold mb-4"
+                            style="
+                                background: #1e5aa8;
+                                height: 60px;
+                                font-size: 24px;
+                            "
+                        >
+                            Crear cliente
+                        </button>
+
+                        <!-- METODO PAGO -->
+                        <div class="mb-4">
+
+                            <label class="form-label fw-bold">
+                                Método de pago
+                            </label>
+
+                            <select
+                                class="form-select form-select-lg"
+                            >
+                                <option>
+                                    EFECTIVO
+                                </option>
+
+                                <option>
+                                    YAPE
+                                </option>
+
+                                <option>
+                                    PLIN
+                                </option>
+
+                                <option>
+                                    TARJETA
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                        <!-- BOTONES RAPIDOS -->
+                        <div class="row g-3 mb-4">
+
+                            <div class="col-4">
+                                <button class="btn btn-light border w-100 py-3 fs-4">
+                                    10
+                                </button>
+                            </div>
+
+                            <div class="col-4">
+                                <button class="btn btn-light border w-100 py-3 fs-4">
+                                    20
+                                </button>
+                            </div>
+
+                            <div class="col-4">
+                                <button class="btn btn-light border w-100 py-3 fs-4">
+                                    50
+                                </button>
+                            </div>
+
+                            <div class="col-4">
+                                <button class="btn btn-light border w-100 py-3 fs-4">
+                                    100
+                                </button>
+                            </div>
+
+                            <div class="col-4">
+                                <button class="btn btn-light border w-100 py-3 fs-4">
+                                    200
+                                </button>
+                            </div>
+
+                            <div class="col-4">
+                                <button class="btn btn-light border w-100 py-3 fs-4">
+                                    Exacto
+                                </button>
+                            </div>
+
+                        </div>
+
+                        <!-- INPUT EFECTIVO -->
+                        <div class="mb-4">
+
+                            <label class="form-label fw-bold">
+                                EFECTIVO
+                            </label>
+
+                            <input
+                                type="number"
+                                class="form-control form-control-lg text-center fs-3"
+                                placeholder="Digite valor pagado"
+                            >
+
+                        </div>
+
+                        <!-- TOTAL -->
+                        <div class="text-center mb-4">
+
+                            <div
+                                class="fw-bold mb-2"
+                                style="
+                                    color: #1e5aa8;
+                                    font-size: 28px;
+                                "
+                            >
+                                TOTAL A PAGAR
+                            </div>
+
+                            <div
+                                class="fw-bold"
+                                style="
+                                    font-size: 60px;
+                                "
+                            >
+                                S/ {{ total }}
+                            </div>
+
+                        </div>
+
+                        <!-- BOTON -->
+                        <button
+                            class="btn btn-success w-100 py-3 fs-2 fw-bold"
+                        >
+                            Procesar
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>

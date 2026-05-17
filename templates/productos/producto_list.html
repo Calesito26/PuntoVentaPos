@@ -1,0 +1,295 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    Productos
+{% endblock %}
+
+{% block content %}
+
+<div class="page-card">
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+    <div>
+
+        <h1 class="h3 fw-bold">
+            Productos
+        </h1>
+
+        <p class="text-muted">
+            Gestión inteligente de productos del POS.
+        </p>
+
+    </div>
+
+    <a
+        href="{% url 'productos:producto_create' %}"
+        class="btn btn-primary"
+    >
+
+        <i class="bi bi-plus-circle"></i>
+
+        Nuevo producto
+
+    </a>
+
+</div>
+
+
+<div class="card shadow-sm border-0">
+
+    <div class="card-body">
+
+        <div class="table-responsive">
+
+            <table class="table table-hover align-middle">
+
+                <thead class="table-light">
+
+                    <tr>
+
+                        <th>Barcode</th>
+
+                        <th>Imagen</th>
+
+                        <th>Código</th>
+
+                        <th>Producto</th>
+
+                        <th>Categoría</th>
+
+                        <th>Precio venta</th>
+
+                        <th>Stock</th>
+
+                        <th>Estado</th>
+
+                        <th class="text-end">
+                            Acciones
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody>
+
+                    {% for producto in productos %}
+
+                        <tr>
+
+                            <!-- Barcode -->
+                            <td>
+
+                                {% if producto.barcode_image %}
+
+                                    <img
+                                        src="{{ producto.barcode_image.url }}"
+                                        width="150"
+                                    >
+
+                                {% else %}
+
+                                    <span class="text-muted">
+                                        Sin barcode
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <!-- Imagen -->
+                            <td>
+
+                                {% if producto.imagen %}
+
+                                    <img
+                                        src="{{ producto.imagen.url }}"
+                                        width="60"
+                                        height="60"
+                                        class="rounded border"
+                                        style="object-fit: cover;"
+                                    >
+
+                                {% else %}
+
+                                    <div
+                                        class="bg-light rounded border d-flex align-items-center justify-content-center"
+                                        style="width: 60px; height: 60px;"
+                                    >
+
+                                        <i class="bi bi-image text-muted"></i>
+
+                                    </div>
+
+                                {% endif %}
+
+                            </td>
+
+                            <!-- Código -->
+                            <td>
+
+                                <span class="fw-semibold">
+                                    {{ producto.codigo }}
+                                </span>
+
+                            </td>
+
+                            <!-- Nombre -->
+                            <td>
+
+                                <span class="fw-medium">
+                                    {{ producto.nombre }}
+                                </span>
+
+                            </td>
+
+                            <!-- Categoría -->
+                            <td>
+
+                                <span class="badge bg-secondary">
+                                    {{ producto.categoria.nombre }}
+                                </span>
+
+                            </td>
+
+                            <!-- Precio -->
+                            <td>
+
+                                <span class="fw-semibold text-success">
+                                    S/ {{ producto.precio_venta }}
+                                </span>
+
+                            </td>
+
+                            <!-- Stock -->
+                            <td>
+
+                                {% if producto.stock <= 5 %}
+
+                                    <span class="badge bg-danger">
+
+                                        Bajo: {{ producto.stock }}
+
+                                    </span>
+
+                                {% elif producto.stock <= 15 %}
+
+                                    <span class="badge bg-warning text-dark">
+
+                                        Medio: {{ producto.stock }}
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-success">
+
+                                        {{ producto.stock }}
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <!-- Estado -->
+                            <td>
+
+                                {% if producto.activo %}
+
+                                    <span class="badge bg-success">
+
+                                        Activo
+
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-secondary">
+
+                                        Inactivo
+
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <!-- Acciones -->
+            
+                            <td class="text-end">
+
+                                <div class="d-flex justify-content-end gap-2">
+
+                                    <!-- Imprimir -->
+                                    <a
+                                        href="{% url 'productos:producto_label' producto.id %}"
+                                        class="btn btn-sm btn-dark"
+                                        target="_blank"
+                                    >
+
+                                        <i class="bi bi-printer"></i>
+
+                                    </a>
+
+                                    <!-- Editar -->
+                                    <a
+                                        href="{% url 'productos:producto_update' producto.id %}"
+                                        class="btn btn-sm btn-warning"
+                                    >
+
+                                        <i class="bi bi-pencil-square"></i>
+
+                                    </a>
+
+                                    <!-- Eliminar -->
+                                    <a
+                                        href="{% url 'productos:producto_delete' producto.id %}"
+                                        class="btn btn-sm btn-danger"
+                                    >
+
+                                        <i class="bi bi-trash"></i>
+
+                                    </a>
+
+                                </div>
+
+                            </td>    
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+
+                            <td colspan="9" class="text-center py-5">
+
+                                <div class="text-muted">
+
+                                    <i class="bi bi-box display-5"></i>
+
+                                    <p class="mt-3 mb-0">
+
+                                        No hay productos registrados.
+
+                                    </p>
+
+                                </div>
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+</div>
+{% endblock %}

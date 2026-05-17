@@ -1,0 +1,254 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    Importar Productos Desde Excel
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .import-header {
+        background: #2d57a5;
+        color: white;
+        padding: 18px;
+        font-size: 28px;
+        border-radius: 6px 6px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .import-body {
+        background: white;
+        padding: 28px 22px;
+        min-height: 620px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.08);
+    }
+
+    .upload-card {
+        background: white;
+        padding: 34px;
+        border-radius: 8px;
+        box-shadow: 0 4px 18px rgba(0,0,0,.08);
+    }
+
+    .drop-zone {
+        border: 3px dashed #9aa8b7;
+        height: 150px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        flex-direction: column;
+        margin-bottom: 26px;
+    }
+
+    .drop-zone i {
+        font-size: 46px;
+        color: #0d57a4;
+        margin-bottom: 8px;
+    }
+
+    .btn-cargar {
+        background: #16b37a;
+        color: white;
+        font-size: 22px;
+        border: none;
+        padding: 10px 28px;
+        border-radius: 7px;
+    }
+
+    .btn-cargar:hover {
+        background: #109c68;
+        color: white;
+    }
+
+    .close-x {
+        color: #b9c7dc;
+        text-decoration: none;
+        font-size: 32px;
+        font-weight: bold;
+    }
+
+    .close-x:hover {
+        color: white;
+    }
+
+    .excel-icon {
+        font-size: 44px;
+        color: #12833b;
+        vertical-align: middle;
+        margin: 0 12px;
+    }
+
+    .instructions {
+        font-size: 14px;
+        line-height: 1.7;
+    }
+</style>
+
+<div class="container-fluid">
+
+    <div class="import-header">
+        <span>
+            Importar Productos Desde Excel
+        </span>
+
+        <a
+            href="{% url 'inventario:inventario_producto_list' %}"
+            class="close-x"
+        >
+            ×
+        </a>
+    </div>
+
+    <div class="import-body">
+
+        <div class="row">
+
+            <div class="col-md-7 instructions">
+
+                <p>
+                    El formato trae los siguientes campos:
+                </p>
+
+                <p><strong>Código de barra:</strong></p>
+                <p><strong>Nombre producto:</strong></p>
+
+                <p>
+                    <strong>Es un producto?</strong>:
+                    Marque <strong>Sí</strong> en el caso que sea un producto y
+                    <strong>No</strong> en el caso que no sea un producto o dejarlo vacío
+                </p>
+
+                <p>
+                    <strong>Es un insumo?</strong>:
+                    Marque <strong>Sí</strong> en el caso que sea un insumo y
+                    <strong>No</strong> en el caso que no sea un insumo o dejarlo vacío
+                </p>
+
+                <p>
+                    <strong>Es una receta?</strong>:
+                    Marque <strong>Sí</strong> en el caso que sea una receta y
+                    <strong>No</strong> en el caso que no sea una receta o dejarlo vacío
+                </p>
+
+                <p>
+                    <strong>ID_Categoria:</strong>
+                    Registre las categorías antes de cargar los productos y copie el ID de la categoría para referenciarlo en el archivo de EXCEL.
+                </p>
+
+                <p>
+                    <strong>Unidad medida:</strong>
+                    Escriba el número al cual corresponde la unidad de medida:
+                </p>
+
+                <p>
+                    1.Caja, 2.Paquete, 3.Par, 4.Tambor, 6.Unidad, 11.Centímetro cuadrado,
+                    12.Hectárea, 13.Metro cuadrado, 14.Pie cuadrado, 15.Pulgada cuadrada,
+                    16.Centímetro, 17.Metro, 18.Pie, 19.Pulgada, 20.Gramo, 21.Kilogramo,
+                    22.Libra, 23.Onza, 24.Tonelada, 25.Día, 26.Hora, 27.Minuto, 28.Galón,
+                    29.Litro, 30.Metro Cúbico, 31.Mililitro, 32.Pie Cúbico, 33.Envío,
+                    36.Caja, 37.Bandeja, 35.Ninguna
+                </p>
+
+                <p><strong>Valor Compra:</strong></p>
+                <p><strong>Valor venta:</strong></p>
+                <p><strong>Valor venta al por mayor:</strong></p>
+
+                <p>
+                    <strong>Impuesto:</strong>
+                    Escriba el número al cual corresponde el impuesto
+                </p>
+
+                <p>
+                    1.Ninguno (Excluido), 2.Iva 0%, 3.Iva 16%, 4.Iva 19%, 5.Iva 5%,
+                    6.ImpoConsumo, 100.No Gravado
+                </p>
+
+                <p>
+                    lo contrario escriba <strong>No</strong>
+                </p>
+
+                <p>
+                    <strong>Bodega:</strong>
+                    En el caso que alla registrado bodegas, aqui puede referenciar en que bodega se debe registrar el producto,
+                    de lo contrario lo puede dejar vacío...
+                </p>
+
+                <p><strong>stock:</strong></p>
+                <p><strong>stock minimo:</strong></p>
+
+                <p>
+                    <strong>Fecha vencimiento:</strong>
+                    Diligencie la fecha de vencimiento aplicando el siguiente formato:<strong>AAAA-MM-DD</strong>
+                </p>
+
+                <p><strong>Url imagen:</strong></p>
+
+                <p>
+                    <strong>Estado:</strong>
+                    <strong>No es obligatoria</strong> puede dejarlo vacío y por defecto quedan activos
+                </p>
+
+                <p class="mt-4 d-flex align-items-center gap-2">
+
+                    <strong>Descargar Formato</strong>
+
+                    <a
+                        href="{% url 'inventario:descargar_formato_productos' %}"
+                        class="text-decoration-none d-flex align-items-center gap-2"
+                    >
+                        <i class="bi bi-file-earmark-excel excel-icon"></i>
+                        <span>Click aquí...</span>
+                    </a>
+
+                </p>
+
+            </div>
+
+            <div class="col-md-5">
+
+                <div class="upload-card">
+
+                    <h2 class="fw-bold mb-3">
+                        Importar Productos
+                    </h2>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <label class="drop-zone">
+                            <i class="bi bi-file-earmark-arrow-up"></i>
+                            <span>
+                                Suelta el archivo aquí o haz clic para subirlo.
+                            </span>
+
+                            <input
+                                type="file"
+                                name="archivo_excel"
+                                accept=".xlsx,.xls"
+                                hidden
+                            >
+                        </label>
+
+                        <div class="text-center">
+                            <button class="btn-cargar">
+                                Cargar Archivo
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

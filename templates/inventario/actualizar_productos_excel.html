@@ -1,0 +1,237 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    Actualizar Productos
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .actualizar-header {
+        background: #2d57a5;
+        color: white;
+        padding: 18px;
+        font-size: 28px;
+        border-radius: 6px 6px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .actualizar-body {
+        background: white;
+        padding: 28px 22px;
+        min-height: 620px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.08);
+    }
+
+    .upload-card {
+        background: white;
+        padding: 34px;
+        border-radius: 8px;
+        box-shadow: 0 4px 18px rgba(0,0,0,.08);
+    }
+
+    .drop-zone {
+        border: 3px dashed #9aa8b7;
+        height: 150px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        flex-direction: column;
+        margin-bottom: 26px;
+        cursor: pointer;
+    }
+
+    .drop-zone i {
+        font-size: 46px;
+        color: #0d57a4;
+        margin-bottom: 8px;
+    }
+
+    .btn-cargar {
+        background: #16b37a;
+        color: white;
+        font-size: 22px;
+        border: none;
+        padding: 10px 28px;
+        border-radius: 7px;
+    }
+
+    .btn-cargar:hover {
+        background: #109c68;
+        color: white;
+    }
+
+    .close-x {
+        color: #b9c7dc;
+        text-decoration: none;
+        font-size: 32px;
+        font-weight: bold;
+    }
+
+    .close-x:hover {
+        color: white;
+    }
+
+    .excel-icon {
+        font-size: 44px;
+        color: #12833b;
+        vertical-align: middle;
+        margin: 0 12px;
+    }
+
+    .instructions {
+        font-size: 14px;
+        line-height: 1.7;
+    }
+</style>
+
+<div class="container-fluid">
+
+    <div class="actualizar-header">
+        <span>
+            Actualizar información de productos de manera masiva
+        </span>
+
+        <a
+            href="{% url 'inventario:inventario_producto_list' %}"
+            class="close-x"
+        >
+            ×
+        </a>
+    </div>
+
+    <div class="actualizar-body">
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} py-2">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="row">
+
+            <div class="col-md-7 instructions">
+
+                <p>
+                    El formato trae los siguientes campos:
+                </p>
+
+                <p>
+                    <strong>codigo:</strong>
+                    Es el código del producto, no modificar.
+                </p>
+
+                <p>
+                    <strong>nombre:</strong>
+                    Es el nombre del producto.
+                </p>
+
+                <p>
+                    <strong>descripcion:</strong>
+                    Es una descripción del producto.
+                </p>
+
+                <p>
+                    <strong>categoria:</strong>
+                    ID de la categoría a la cual desea agregar el producto.
+                </p>
+
+                <p>
+                    <strong>valor_compra:</strong>
+                </p>
+
+                <p>
+                    <strong>valor_venta:</strong>
+                </p>
+
+                <p>
+                    <strong>imagen_url:</strong>
+                    URL de imagen del producto.
+                </p>
+
+                <p>
+                    <strong>Bodega:</strong>
+                    ID de la bodega donde desea actualizar el stock.
+                </p>
+
+                <p>
+                    <strong>stock:</strong>
+                </p>
+
+                <p>
+                    <strong>stock minimo:</strong>
+                </p>
+
+                <p>
+                    <strong>es_insumo?:</strong>
+                    Marque <strong>SI</strong> o deje vacío.
+                </p>
+
+                <p>
+                    <strong>receta_servicio_combo:</strong>
+                    Puede escribir RECETA, SERVICIO, COMBO o dejar vacío.
+                </p>
+
+                <p>
+                    <strong>Estado:</strong>
+                    1.Activo, 2.No Activo, 3.Eliminar.
+                </p>
+
+                <p class="mt-4">
+                    <strong>Descargar Formato</strong>
+                    <i class="bi bi-file-earmark-excel excel-icon"></i>
+                    Click aquí...
+                </p>
+
+            </div>
+
+            <div class="col-md-5">
+
+                <div class="upload-card">
+
+                    <h2 class="fw-bold mb-3">
+                        Actualizar Productos
+                    </h2>
+
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <label class="drop-zone">
+                            <i class="bi bi-file-earmark-arrow-up"></i>
+                            <span>
+                                Suelta el archivo aquí o haz clic para subirlo.
+                            </span>
+
+                            <input
+                                type="file"
+                                name="archivo_excel"
+                                accept=".xlsx,.xls"
+                                hidden
+                            >
+                        </label>
+
+                        <div class="text-center">
+                            <button class="btn-cargar">
+                                Cargar Archivo
+                            </button>
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

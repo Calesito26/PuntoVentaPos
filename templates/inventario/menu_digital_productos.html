@@ -1,0 +1,258 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    Gestionar Productos Menú Digital
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .menu-title {
+        text-align: center;
+        font-size: 26px;
+        font-weight: bold;
+        margin-bottom: 20px;
+    }
+
+    .menu-card {
+        background: white;
+        border-radius: 10px;
+        padding: 18px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.06);
+    }
+
+    .tabla-menu {
+        font-size: 14px;
+    }
+
+    .tabla-menu th {
+        background: #e7e7e7;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #d8d8d8;
+        padding: 12px 8px;
+        font-weight: bold;
+    }
+
+    .tabla-menu td {
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #e1e1e1;
+        padding: 8px;
+    }
+
+    .producto-img-mini {
+        width: 55px;
+        height: 55px;
+        object-fit: contain;
+        border-radius: 50%;
+        background: #f7f7f7;
+    }
+
+    .estado-activo {
+        background: #5ba36a;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 12px;
+    }
+
+    .icon-ok {
+        color: #06164f;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .icon-no {
+        color: red;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .btn-regresar {
+        background: #2453a6;
+        color: white;
+        border-radius: 8px;
+        padding: 10px 22px;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .btn-regresar:hover {
+        color: white;
+        background: #1d478f;
+    }
+</style>
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-end mb-3">
+        <a href="{% url 'inventario:inventario_producto_list' %}" class="btn-regresar">
+            <i class="bi bi-chevron-left"></i>
+            Regresar
+        </a>
+    </div>
+
+    <h1 class="menu-title">
+        Gestionar Productos Menú Digital
+    </h1>
+
+    <div class="mb-3">
+        <label>Por página</label>
+        <select class="form-select form-select-sm" style="width:90px;">
+            <option>10</option>
+            <option>25</option>
+            <option>50</option>
+        </select>
+    </div>
+
+    <div class="menu-card">
+
+        <form method="get" class="row align-items-end mb-3">
+
+            <div class="col-md-3">
+                <label class="fw-bold mb-1">
+                    Categoría
+                </label>
+
+                <select
+                    name="categoria"
+                    class="form-select form-select-sm"
+                    onchange="this.form.submit();"
+                >
+                    <option value="">TODAS</option>
+
+                    {% for categoria in categorias %}
+                        <option
+                            value="{{ categoria.id }}"
+                            {% if categoria_id == categoria.id|stringformat:'s' %}selected{% endif %}
+                        >
+                            {{ categoria.nombre|upper }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-4 offset-md-5">
+                <div class="d-flex gap-2">
+                    <input
+                        type="text"
+                        name="buscar"
+                        value="{{ buscar }}"
+                        class="form-control form-control-sm"
+                        placeholder="Buscar por nombre o código"
+                    >
+
+                    <button class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+
+        </form>
+
+        <div class="table-responsive">
+
+            <table class="table tabla-menu align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Agregar<br>Al<br>Menu </th>
+                        <th>Imagen</th>
+                        <th>Código de Barra</th>
+                        <th>Nombre</th>
+                        <th>Stock</th>
+                        <th>Valor de Compra</th>
+                        <th>Valor de Venta</th>
+                        <th>Producto</th>
+                        <th>Receta<br>Servicio<br>Combo</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for stock in stocks %}
+
+                        <tr>
+                            <td>
+                                <input type="checkbox" checked>
+                            </td>
+
+                            <td>
+
+                                {% if stock.producto.imagen %}
+                                    <img src="{{ stock.producto.imagen.url }}" class="producto-img-mini">
+                                {% elif stock.producto.imagen_url %}
+                                    <img src="{{ stock.producto.imagen_url }}" class="producto-img-mini">
+                                {% else %}
+                                    <i class="bi bi-box-seam fs-3 text-muted"></i>
+                                {% endif %}
+
+                            </td>
+
+                            <td>{{ stock.producto.codigo }}</td>
+
+                            <td class="text-start">
+                                {{ stock.producto.nombre }}
+                            </td>
+
+                            <td>{{ stock.stock }} Und</td>
+
+                            <td>S/ {{ stock.producto.precio_compra|default:"0.00" }}</td>
+
+                            <td>S/ {{ stock.producto.precio_venta }}</td>
+
+                            <td><span class="icon-ok">✔</span></td>
+
+                            <td><span class="icon-no">✖</span></td>
+
+                            <td>
+                                {% if stock.activo and stock.producto.activo %}
+                                    <span class="estado-activo">Activo</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Inactivo</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+                            <td colspan="10" class="text-center py-5 text-muted">
+                                No hay productos para menú digital.
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div>Paginas: 1</div>
+
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item disabled">
+                        <a class="page-link">«</a>
+                    </li>
+                    <li class="page-item active">
+                        <a class="page-link">1</a>
+                    </li>
+                    <li class="page-item disabled">
+                        <a class="page-link">»</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

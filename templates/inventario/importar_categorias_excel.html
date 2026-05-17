@@ -1,0 +1,202 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    Importar Categorías Desde Excel
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .modal-header-custom {
+        background: #2d57a5;
+        color: white;
+        padding: 18px;
+        font-size: 30px;
+        border-radius: 6px 6px 0 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-body-custom {
+        background: white;
+        padding: 24px;
+        min-height: 470px;
+        box-shadow: 0 4px 16px rgba(0,0,0,.08);
+    }
+
+    .upload-card {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 4px 18px rgba(0,0,0,.08);
+    }
+
+    .drop-zone {
+        border: 3px dashed #9aa8b7;
+        height: 150px;
+        border-radius: 8px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        color: #999;
+        cursor: pointer;
+        margin-bottom: 24px;
+    }
+
+    .drop-zone i {
+        font-size: 48px;
+        color: #0d57a4;
+        margin-bottom: 8px;
+    }
+
+    .btn-cargar {
+        background: #16b37a;
+        color: white;
+        font-size: 22px;
+        border: none;
+        padding: 10px 28px;
+        border-radius: 7px;
+    }
+
+    .btn-cargar:hover {
+        background: #109c68;
+        color: white;
+    }
+
+    .close-x {
+        color: #b9c7dc;
+        text-decoration: none;
+        font-size: 32px;
+        font-weight: bold;
+    }
+
+    .close-x:hover {
+        color: white;
+    }
+
+    .excel-icon {
+        font-size: 42px;
+        color: #12833b;
+    }
+
+    .instructions {
+        font-size: 14px;
+        line-height: 1.6;
+    }
+</style>
+
+<div class="container-fluid" style="max-width: 980px;">
+
+    <div class="modal-header-custom">
+
+        <span>
+            Importar Categorías Desde Excel
+        </span>
+
+        <a
+            href="{% url 'inventario:categoria_inventario_list' %}"
+            class="close-x"
+        >
+            ×
+        </a>
+
+    </div>
+
+    <div class="modal-body-custom">
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} py-2">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="row">
+
+            <div class="col-md-7 instructions">
+
+                <p>
+                    Descargue el siguiente formato y diligencie la información.
+                </p>
+
+                <p>
+                    Actualmente se piden los siguientes campos:
+                </p>
+
+                <p>
+                    <strong>Nombre:</strong>
+                    Es el nombre de la categoría.
+                </p>
+
+                <p>
+                    <strong>Estado:</strong>
+                    No es obligatorio. Puede dejarlo vacío y por defecto quedará activo.
+                </p>
+
+                <p>
+                    Use <strong>SI</strong> para activo y <strong>NO</strong> para inactivo.
+                </p>
+
+                <p class="mt-4">
+                    <strong>Descargar Formato</strong>
+                </p>
+
+                <a href="{% url 'inventario:descargar_formato_categorias' %}">
+                    <i class="bi bi-file-earmark-excel excel-icon"></i>
+                </a>
+
+            </div>
+
+            <div class="col-md-5">
+
+                <div class="upload-card">
+
+                    <h2 class="fw-bold mb-3">
+                        Importar Categorías
+                    </h2>
+
+                    <form method="post" enctype="multipart/form-data">
+
+                        {% csrf_token %}
+
+                        <label class="drop-zone">
+
+                            <i class="bi bi-file-earmark-arrow-up"></i>
+
+                            <span class="text-center">
+                                Suelta el archivo aquí o haz clic para subirlo.
+                            </span>
+
+                            <input
+                                type="file"
+                                name="archivo_excel"
+                                accept=".xlsx,.xls"
+                                hidden
+                            >
+
+                        </label>
+
+                        <div class="text-center">
+
+                            <button class="btn-cargar">
+                                Cargar Archivo
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

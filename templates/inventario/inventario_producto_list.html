@@ -1,0 +1,484 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    Listado de productos
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .page-title {
+        text-align: center;
+        font-weight: 700;
+        font-size: 28px;
+        margin-bottom: 10px;
+    }
+
+    .inventario-wrapper {
+        padding: 8px 10px;
+    }
+
+    .inventario-card {
+        background: white;
+        border-radius: 8px;
+        padding: 18px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.06);
+    }
+
+    .top-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        margin-bottom: 10px;
+    }
+
+    .export-box {
+        text-align: center;
+        font-size: 15px;
+    }
+
+    .export-icons i {
+        font-size: 30px;
+        margin: 0 5px;
+        cursor: pointer;
+    }
+
+    .filter-row {
+        display: grid;
+        grid-template-columns: 250px 250px 1fr 340px;
+        gap: 14px;
+        align-items: end;
+        margin-bottom: 22px;
+    }
+
+    .tool-icons {
+        display: flex;
+        justify-content: center;
+        gap: 28px;
+        text-align: center;
+        font-size: 14px;
+        line-height: 16px;
+    }
+
+    .tool-icons a {
+        color: #0d57a4;
+        text-decoration: none;
+    }
+
+    .tool-icons i {
+        font-size: 30px;
+        display: block;
+    }
+
+    .search-area {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .btn-nuevo {
+        background: #2453a6;
+        color: white;
+        border-radius: 8px;
+        padding: 7px 18px;
+        text-decoration: none;
+        font-weight: bold;
+        border: none;
+    }
+
+    .btn-nuevo:hover {
+        color: white;
+        background: #1d478f;
+    }
+
+    .tabla-inventario {
+        font-size: 14px;
+    }
+
+    .tabla-inventario th {
+        background: #e7e7e7;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #d8d8d8;
+        padding: 10px 6px;
+        font-weight: 700;
+    }
+
+    .tabla-inventario td {
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #e1e1e1;
+        padding: 7px 6px;
+    }
+
+    .tabla-inventario .nombre {
+        text-align: left;
+        min-width: 310px;
+    }
+
+    .producto-img-mini {
+        width: 55px;
+        height: 55px;
+        object-fit: contain;
+        border-radius: 8px;
+        background: #f8f9fa;
+        border: 1px solid #e5e5e5;
+        padding: 3px;
+    }
+
+    .sin-imagen {
+        width: 55px;
+        height: 55px;
+        border-radius: 8px;
+        background: #f8f9fa;
+        border: 1px solid #e5e5e5;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: auto;
+        color: #999;
+    }
+
+    .estado-activo {
+        background: #5ba36a;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 12px;
+    }
+
+    .icon-ok {
+        color: #06164f;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .icon-no {
+        color: red;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .action-icon {
+        font-size: 19px;
+        margin: 0 3px;
+        text-decoration: none;
+    }
+
+    .edit-icon {
+        color: #333;
+    }
+
+    .delete-icon {
+        color: red;
+    }
+
+    @media(max-width: 1300px) {
+        .filter-row {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+</style>
+
+<div class="inventario-wrapper">
+
+    <h1 class="page-title">
+        Listado de productos
+    </h1>
+
+    <div class="top-line">
+
+        <div>
+            <label>Por página</label>
+            <select class="form-select form-select-sm" style="width:90px;">
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+            </select>
+        </div>
+
+        <div class="export-box">
+            <div>Exportar</div>
+            <div class="export-icons">
+                <a href="{% url 'inventario:preview_exportar_productos' %}">
+                    <i class="bi bi-file-earmark-excel text-success"></i>
+                </a>
+
+                <a href="{% url 'inventario:preview_exportar_productos' %}">
+                    <i class="bi bi-file-earmark-pdf text-danger"></i>
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="inventario-card">
+
+        <form method="get" id="filtroInventario">
+
+            <div class="filter-row">
+
+                <div>
+                    <label class="fw-bold mb-1">
+                        Tipos de productos
+                    </label>
+
+                    <select
+                        name="categoria"
+                        class="form-select form-select-sm"
+                        onchange="document.getElementById('filtroInventario').submit();"
+                    >
+                        <option value="">TODOS</option>
+
+                        {% for categoria in categorias %}
+                            <option
+                                value="{{ categoria.id }}"
+                                {% if categoria_id == categoria.id|stringformat:'s' %}selected{% endif %}
+                            >
+                                {{ categoria.nombre|upper }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="fw-bold mb-1">
+                        Bodega
+                    </label>
+
+                    <select
+                        name="sede"
+                        class="form-select form-select-sm"
+                        onchange="document.getElementById('filtroInventario').submit();"
+                    >
+                        <option value="">TODAS</option>
+
+                        {% for sede in sedes %}
+                            <option
+                                value="{{ sede.id }}"
+                                {% if sede_id == sede.id|stringformat:'s' %}selected{% endif %}
+                            >
+                                {{ sede.nombre|upper }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="tool-icons">
+
+                    <a href="{% url 'inventario:menu_digital_productos' %}">
+                        <span>Menú<br>Digital</span>
+                        <i class="bi bi-qr-code"></i>
+                    </a>
+
+                    <a href="{% url 'inventario:variacion_producto_list' %}">
+                        <span>Ver<br>Variación</span>
+                        <i class="bi bi-sliders"></i>
+                    </a>
+
+                    <a href="{% url 'inventario:importar_productos_excel' %}">
+                        <span>Importar<br>Productos</span>
+                        <i class="bi bi-cloud-arrow-up"></i>
+                    </a>
+
+                    <a href="{% url 'inventario:actualizar_productos_excel' %}">
+                        <span>Actualizar<br>Productos</span>
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </a>
+
+                </div>
+
+                <div>
+                    <div class="search-area">
+
+                        <input
+                            type="text"
+                            name="buscar"
+                            value="{{ buscar }}"
+                            class="form-control form-control-sm"
+                            placeholder="Buscar por nombre o Cód. de barra"
+                        >
+
+                        <button class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-search"></i>
+                        </button>
+
+                        <a
+                            href="{% url 'inventario:stock_bodega_create' %}"
+                            class="btn-nuevo"
+                        >
+                            Nuevo
+                        </a>
+
+                    </div>
+                </div>
+
+            </div>
+
+        </form>
+
+        <div class="table-responsive">
+
+            <table class="table tabla-inventario align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Imagen</th>
+                        <th>Código de<br>Barra</th>
+                        <th>Nombre</th>
+                        <th>Stock</th>
+                        <th>Valor de<br>Compra</th>
+                        <th>Valor de<br>Venta</th>
+                        <th>Valor de Venta Al<br>por Mayor</th>
+                        <th>Producto</th>
+                        <th>Insumo</th>
+                        <th>Receta<br>Servicio<br>Combo</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for stock in stocks %}
+
+                        <tr>
+
+                            <td>
+                                {{ forloop.counter }}
+                            </td>
+
+                            <td>
+                                {% if stock.producto.imagen %}
+                                    <img
+                                        src="{{ stock.producto.imagen.url }}"
+                                        class="producto-img-mini"
+                                    >
+                                {% elif stock.producto.imagen_url %}
+                                    <img
+                                        src="{{ stock.producto.imagen_url }}"
+                                        class="producto-img-mini"
+                                    >
+                                {% else %}
+                                    <div class="sin-imagen">
+                                        <i class="bi bi-image"></i>
+                                    </div>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {{ stock.producto.codigo }}
+                            </td>
+
+                            <td class="nombre">
+                                {{ stock.producto.nombre }}
+                            </td>
+
+                            <td>
+                                {{ stock.stock }} Und
+                            </td>
+
+                            <td>
+                                S/ {{ stock.producto.precio_compra|default:"0.00" }}
+                            </td>
+
+                            <td>
+                                S/ {{ stock.producto.precio_venta }}
+                            </td>
+
+                            <td>
+                                S/ 0.00
+                            </td>
+
+                            <td>
+                                <span class="icon-ok">✔</span>
+                            </td>
+
+                            <td>
+                                <span class="icon-no">✖</span>
+                            </td>
+
+                            <td>
+                                <span class="icon-no">✖</span>
+                            </td>
+
+                            <td>
+                                {% if stock.activo and stock.producto.activo %}
+                                    <span class="estado-activo">
+                                        Activo
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger">
+                                        Inactivo
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <a
+                                    href="{% url 'inventario:stock_bodega_update' stock.id %}"
+                                    class="action-icon edit-icon"
+                                >
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+
+                                <a
+                                    href="{% url 'inventario:stock_bodega_delete' stock.id %}"
+                                    class="action-icon delete-icon"
+                                    onclick="return confirm('¿Seguro que deseas eliminar este producto?');"
+                                >
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+
+                        </tr>
+
+                    {% empty %}
+
+                        <tr>
+                            <td colspan="13" class="text-center py-5 text-muted">
+                                No hay productos asignados a bodegas.
+                            </td>
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+
+            <div>
+                Paginas: 1
+            </div>
+
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+
+                    <li class="page-item disabled">
+                        <a class="page-link">«</a>
+                    </li>
+
+                    <li class="page-item active">
+                        <a class="page-link">1</a>
+                    </li>
+
+                    <li class="page-item disabled">
+                        <a class="page-link">»</a>
+                    </li>
+
+                </ul>
+            </nav>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

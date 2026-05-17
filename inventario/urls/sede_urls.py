@@ -1,0 +1,50 @@
+from django.urls import path
+
+from inventario.views.sede_views import sede_create
+from inventario.views.sede_views import sede_delete
+from inventario.views.sede_views import sede_list
+from inventario.views.sede_views import sede_update
+from inventario.views.inventario_producto_views import inventario_producto_list
+from inventario.views.stock_bodega_views import stock_bodega_create
+from inventario.views.stock_bodega_views import stock_bodega_update
+from inventario.views.menu_digital_views import menu_digital_productos
+from inventario.views.variacion_producto_views import variacion_producto_list
+from inventario.views.importar_productos_views import importar_productos_excel
+from inventario.views.importar_productos_views import descargar_formato_productos
+from inventario.views.stock_bodega_views import stock_bodega_delete
+from inventario.views.actualizar_productos_views import actualizar_productos_excel
+from inventario.views.exportar_productos_views import preview_exportar_productos
+from inventario.views.exportar_productos_views import exportar_productos_excel
+from inventario.views.exportar_productos_views import exportar_productos_pdf
+from inventario.views.categoria_inventario_views import categoria_inventario_list
+from inventario.views.importar_exportar_categorias_views import importar_categorias_excel
+from inventario.views.importar_exportar_categorias_views import descargar_formato_categorias
+from inventario.views.importar_exportar_categorias_views import exportar_categorias_excel
+from inventario.views.importar_exportar_categorias_views import exportar_categorias_pdf
+
+app_name = 'inventario'
+
+urlpatterns = [
+    path('bodegas/', sede_list, name='sede_list'),
+    path('bodegas/nueva/', sede_create, name='sede_create'),
+    path('bodegas/editar/<int:pk>/', sede_update, name='sede_update'),
+    path('bodegas/eliminar/<int:pk>/', sede_delete, name='sede_delete'),
+    path('productos/', inventario_producto_list, name='inventario_producto_list'),
+    path('ajustes/nuevo/', stock_bodega_create, name='stock_bodega_create'),
+    path('ajustes/editar/<int:pk>/', stock_bodega_update, name='stock_bodega_update'),
+    path('productos/menu-digital/', menu_digital_productos, name='menu_digital_productos'),
+    path('productos/variaciones/', variacion_producto_list, name='variacion_producto_list'),
+    path('productos/importar/',importar_productos_excel,name='importar_productos_excel'),
+    path('productos/importar/',importar_productos_excel,name='importar_productos_excel'),
+    path('productos/importar/formato/',descargar_formato_productos,name='descargar_formato_productos'),
+    path('ajustes/eliminar/<int:pk>/',stock_bodega_delete,name='stock_bodega_delete'),
+    path('productos/actualizar/',actualizar_productos_excel,name='actualizar_productos_excel'),
+    path('productos/exportar/preview/',preview_exportar_productos,name='preview_exportar_productos'),
+    path('productos/exportar/excel/',exportar_productos_excel,name='exportar_productos_excel'),
+    path('productos/exportar/pdf/',exportar_productos_pdf,name='exportar_productos_pdf'),
+    path('categorias/',categoria_inventario_list,name='categoria_inventario_list'),
+    path('categorias/importar/',importar_categorias_excel,name='importar_categorias_excel'),
+    path('categorias/importar/formato/',descargar_formato_categorias,name='descargar_formato_categorias'),
+    path('categorias/exportar/excel/',exportar_categorias_excel,name='exportar_categorias_excel'),
+    path('categorias/exportar/pdf/',exportar_categorias_pdf,name='exportar_categorias_pdf'),
+]

@@ -1,0 +1,36 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    {{ titulo }}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-card">
+
+    <h1 class="h3 fw-bold mb-4">
+        {{ titulo }}
+    </h1>
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        {{ form.as_p }}
+
+        <button class="btn btn-primary">
+            Guardar
+        </button>
+
+        <a
+            href="{% url 'usuarios:usuario_list' %}"
+            class="btn btn-secondary"
+        >
+            Cancelar
+        </a>
+
+    </form>
+
+</div>
+
+{% endblock %}

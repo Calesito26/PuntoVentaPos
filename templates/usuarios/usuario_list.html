@@ -1,0 +1,124 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    Usuarios
+{% endblock %}
+
+{% block content %}
+
+<div class="page-card">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h1 class="h3 fw-bold">
+                Usuarios del sistema
+            </h1>
+
+            <p class="text-muted">
+                Administradores y vendedores del POS.
+            </p>
+        </div>
+
+        <a
+            href="{% url 'usuarios:usuario_create' %}"
+            class="btn btn-primary"
+        >
+            Nuevo usuario
+        </a>
+
+    </div>
+
+    <table class="table table-hover align-middle">
+
+        <thead class="table-light">
+
+            <tr>
+                <th>Usuario</th>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Rol</th>
+                <th>Estado</th>
+            </tr>
+
+        </thead>
+
+        <tbody>
+
+            {% for usuario in usuarios %}
+
+                <tr>
+
+                    <td>
+                        {{ usuario.username }}
+                    </td>
+
+                    <td>
+                        {{ usuario.first_name }} {{ usuario.last_name }}
+                    </td>
+
+                    <td>
+                        {{ usuario.email }}
+                    </td>
+
+                    <td>
+                        {% if usuario.is_superuser %}
+
+                            <span class="badge bg-dark">
+                                Superusuario
+                            </span>
+
+                        {% else %}
+
+                            {% for grupo in usuario.groups.all %}
+
+                                <span class="badge bg-primary">
+                                    {{ grupo.name }}
+                                </span>
+
+                            {% empty %}
+
+                                <span class="badge bg-secondary">
+                                    Sin rol
+                                </span>
+
+                            {% endfor %}
+
+                        {% endif %}
+                    </td>
+
+                    <td>
+                        {% if usuario.is_active %}
+
+                            <span class="badge bg-success">
+                                Activo
+                            </span>
+
+                        {% else %}
+
+                            <span class="badge bg-danger">
+                                Inactivo
+                            </span>
+
+                        {% endif %}
+                    </td>
+
+                </tr>
+
+            {% empty %}
+
+                <tr>
+                    <td colspan="5" class="text-center text-muted">
+                        No hay usuarios registrados.
+                    </td>
+                </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}

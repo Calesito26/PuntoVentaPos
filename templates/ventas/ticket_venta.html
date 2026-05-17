@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ticket Venta #{{ venta.id }}</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            width: 58mm;
+            font-size: 12px;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .titulo {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        td {
+            padding: 3px 0;
+        }
+
+        .total {
+            font-size: 16px;
+            font-weight: bold;
+            text-align: right;
+        }
+
+        .acciones {
+            margin-top: 20px;
+        }
+
+        @media print {
+            .acciones {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="center titulo">
+        PuntoVentaPOS
+    </div>
+
+    <div class="center">
+        Ticket #{{ venta.id }}
+    </div>
+
+    <div class="center">
+        {{ venta.fecha|date:"d/m/Y H:i" }}
+    </div>
+
+    <hr>
+
+    <table>
+        {% for detalle in venta.detalles.all %}
+            <tr>
+                <td colspan="2">
+                    {{ detalle.producto.nombre }}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    {{ detalle.cantidad }} x S/ {{ detalle.precio_unitario }}
+                </td>
+                <td style="text-align:right;">
+                    S/ {{ detalle.subtotal }}
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <hr>
+
+    <div class="total">
+        TOTAL: S/ {{ venta.total }}
+    </div>
+
+    <hr>
+
+    <div class="center">
+        Gracias por su compra
+    </div>
+
+    <div class="acciones">
+        <button onclick="window.print()">
+            Imprimir ticket
+        </button>
+    </div>
+
+</body>
+</html>
