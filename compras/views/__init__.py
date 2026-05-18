@@ -1,0 +1,2 @@
+from .nueva_compra_views import nueva_compra
+from .nueva_compra_views import guardar_compra

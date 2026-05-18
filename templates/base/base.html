@@ -123,6 +123,25 @@
             background: rgba(255, 255, 255, 0.12);
             color: white;
         }
+
+        .menu-dropdown:hover .submenu-Compras {
+            display: flex;
+        }
+
+        .submenu-Compras {
+            position: absolute;
+            left: 92px;
+            top: 0;
+            width: 240px;
+            min-height: 100vh;
+            background: #416db4;
+            display: none;
+            flex-direction: column;
+            padding-top: 12px;
+            z-index: 3000;
+        }
+
+
     </style>
     {% block css %}{% endblock %}
 </head>
@@ -164,6 +183,29 @@
                 <a href="{% url 'inventario:seguimiento_producto_list' %}" class="submenu-item">Seguimiento de productos</a>
             </div>
         </div>
+
+        <div class="menu-dropdown">
+            <div class="menu-item">
+                <i class="bi bi-bag"></i>
+                Compras
+            </div>
+            <div class="submenu-Compras">
+
+                <a href="{% url 'compras:nueva_compra' %}" class="submenu-item">Nueva Compra</a>
+                <a href="#" class="submenu-item">Ordenes de compra</a>
+                <a href="#" class="submenu-item">Historial Compra</a>
+                <a href="#" class="submenu-item">Detalle de compras</a>
+                <a href="#" class="submenu-item">Créditos de compras</a>
+                <a href="#" class="submenu-item">Compras por categorias</a>
+                <a href="#" class="submenu-item"> Devolucion, notas de ajustes</a>
+                <a href="#" class="submenu-item">Eventos RADIAN</a>
+                <a href="#" class="submenu-item"> Comprobante Informe Diario</a>
+
+            </div>
+
+        </div>
+        
+
         <a href="{% url 'clientes:cliente_list' %}" class="menu-item">
             <i class="bi bi-people"></i>
             Clientes

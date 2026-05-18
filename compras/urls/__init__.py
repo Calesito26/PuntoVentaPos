@@ -1,0 +1,1 @@
+from .compra_urls import urlpatterns

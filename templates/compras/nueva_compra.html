@@ -1,0 +1,1297 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Nueva Compra{% endblock %}
+
+{% block content %}
+
+<style>
+    .compra-layout {
+        display: grid;
+        grid-template-columns: 34% 66%;
+        gap: 14px;
+        padding: 8px 12px;
+    }
+
+    .panel {
+        background: white;
+        border-radius: 8px;
+        padding: 14px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.05);
+    }
+
+    .buscador-producto {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 18px;
+    }
+
+    .buscador-producto i {
+        font-size: 32px;
+        color: #111;
+    }
+
+    .tabla-compra {
+        width: 100%;
+        font-size: 13px;
+    }
+
+    .tabla-compra th {
+        background: #dfe5ee;
+        padding: 12px 8px;
+        text-align: center;
+        border: 1px solid #d6d6d6;
+        font-weight: bold;
+    }
+
+    .tabla-compra td {
+        padding: 10px 8px;
+        border-bottom: 1px solid #ddd;
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .producto-row {
+        cursor: pointer;
+    }
+
+    .producto-row:hover {
+        background: #f1f5ff;
+    }
+
+    .info-header {
+        background: #0d57a4;
+        color: white;
+        font-weight: bold;
+        text-align: center;
+        padding: 13px;
+        border-radius: 6px 6px 0 0;
+        position: relative;
+    }
+
+    .info-header i:first-child {
+        position: absolute;
+        left: 18px;
+        font-size: 26px;
+    }
+
+    .info-header .back-icon {
+        position: absolute;
+        right: 18px;
+        font-size: 34px;
+        top: 5px;
+    }
+
+    .detalle-panel {
+        background: white;
+        border-radius: 0 0 8px 8px;
+        padding: 0;
+        box-shadow: 0 3px 12px rgba(0,0,0,.05);
+    }
+
+    .tabla-detalle th {
+        background: #dfe5ee;
+        border: 1px solid #d6d6d6;
+        padding: 10px 6px;
+        font-size: 13px;
+        text-align: center;
+    }
+
+    .tabla-detalle td {
+        border: 1px solid #e1e1e1;
+        padding: 8px 6px;
+        text-align: center;
+        vertical-align: middle;
+        font-size: 13px;
+    }
+
+    .input-mini {
+        height: 30px;
+        font-size: 13px;
+        text-align: right;
+    }
+
+    .totales-table {
+        margin-top: 22px;
+        width: 100%;
+        font-size: 14px;
+    }
+
+    .totales-table td {
+        border: 1px solid #ddd;
+        padding: 9px;
+        font-weight: bold;
+    }
+
+    .total-final {
+        color: #00a832;
+        font-size: 17px;
+    }
+
+    .acciones-compra {
+        display: grid;
+        grid-template-columns: 1fr 190px 190px;
+        gap: 4px;
+        margin-top: 22px;
+    }
+
+    .btn-comprar {
+        background: #2453a6;
+        color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 7px;
+        font-weight: bold;
+    }
+
+    .btn-espera {
+        background: white;
+        color: #0d6efd;
+        border: 1px solid #0d6efd;
+        padding: 10px;
+        border-radius: 7px;
+        font-weight: bold;
+    }
+
+    .btn-cancelar {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 7px;
+        font-weight: bold;
+    }
+
+    .remove-item {
+        color: red;
+        cursor: pointer;
+        font-size: 18px;
+    }
+
+
+    .modal-custom {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,.55);
+        z-index: 5000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-descuento {
+        width: 470px;
+        background: white;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .modal-header-pos {
+        background: #2d57a5;
+        color: white;
+        padding: 18px;
+        font-size: 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn-close-pos {
+        background: transparent;
+        border: none;
+        color: #c9d8ef;
+        font-size: 32px;
+        font-weight: bold;
+    }
+
+    .modal-body-pos {
+        padding: 24px;
+    }
+
+    .modal-pago-compra {
+        width: 980px;
+        max-width: 95%;
+        background: white;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .modal-pago-compra .modal-body-pos {
+        padding: 24px;
+    }
+
+    .modal-pago-compra label {
+        margin-bottom: 5px;
+    }
+    .modal-proveedor {
+        width: 720px;
+        max-width: 95%;
+        background: white;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .modal-proveedor .modal-header-pos {
+        justify-content: center;
+        font-size: 34px;
+        position: relative;
+    }
+
+    .modal-proveedor .btn-close-pos {
+        position: absolute;
+        right: 18px;
+    }
+
+    .modal-proveedor label {
+        margin-bottom: 5px;
+    }
+
+    .compras-espera-tabs {
+        position: fixed;
+        bottom: 22px;
+        left: 95px;
+        display: flex;
+        gap: 8px;
+        z-index: 2000;
+    }
+
+    .tab-compra-espera {
+        background: #2453a6;
+        color: white;
+        padding: 10px 14px;
+        border-radius: 6px 6px 0 0;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .tab-compra-espera .cerrar-tab {
+        background: #dc3545;
+        margin-left: 10px;
+        padding: 8px;
+        border-radius: 0 5px 0 0;
+    }
+
+</style>
+
+<div class="compra-layout">
+
+    <div class="panel">
+
+        <form method="get" class="buscador-producto">
+            <i class="bi bi-search"></i>
+            <i class="bi bi-upc-scan"></i>
+
+            <input
+                type="text"
+                name="buscar"
+                value="{{ buscar }}"
+                class="form-control"
+                placeholder="Encuentra tu producto aquí..."
+            >
+        </form>
+
+        <table class="tabla-compra">
+            <thead>
+                <tr>
+                    <th>STOCK</th>
+                    <th>COD</th>
+                    <th>PRODUCTO</th>
+                    <th>PRECIO<br>COMPRA</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for stock in productos_stock %}
+                    <tr
+                        class="producto-row"
+                        data-id="{{ stock.producto.id }}"
+                        data-stock="{{ stock.stock|floatformat:0 }}"
+                        data-codigo="{{ stock.producto.codigo }}"
+                        data-nombre="{{ stock.producto.nombre|escapejs }}"
+                        data-compra="{{ stock.producto.precio_compra|stringformat:'f' }}"
+                        data-venta="{{ stock.producto.precio_venta|stringformat:'f' }}"
+                    >
+                        <td>{{ stock.stock|floatformat:0 }} Und</td>
+                        <td>{{ stock.producto.codigo }}</td>
+                        <td class="text-start">{{ stock.producto.nombre }}</td>
+                        <td>S/ {{ stock.producto.precio_compra|floatformat:2 }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="11" class="text-center text-muted py-4">
+                            No hay productos.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+    </div>
+
+    <div>
+
+        <div class="info-header">
+            <i class="bi bi-bag-check"></i>
+            INFORMACIÓN DE LA COMPRA
+            <i class="bi bi-chevron-left back-icon"></i>
+        </div>
+
+        <div class="detalle-panel">
+
+            <table class="tabla-detalle" id="tablaDetalle">
+                <thead>
+                    <tr>
+                        <th>Stock</th>
+                        <th>Producto</th>
+                        <th>Cant</th>
+                        <th>Vr Base</th>
+                        <th>% Impuestos</th>
+                        <th>Valor Compra</th>
+                        <th>Valor Venta</th>
+                        <th>Retc</th>
+                        <th>% Desc</th>
+                        <th>SubTotal</th>
+                        <th></th>
+                    </tr>
+                </thead>
+
+                <tbody id="detalleBody">
+                    <tr id="sinRegistros">
+                        <td colspan="11" class="text-center text-muted">
+                            Sin registros de productos agregados
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <table class="totales-table">
+                <tr>
+                    <td class="text-end">Total Bruto:</td>
+                    <td class="text-end" id="totalBruto">S/ 0.00</td>
+                </tr>
+                <tr>
+                    <td class="text-end">
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-link text-dark fw-bold text-decoration-none"
+                            onclick="abrirModalDescuento()"
+                        >
+                            <i class="bi bi-pencil-square me-2"></i>
+                            Descuento:
+                        </button>
+                    </td>
+                    <td class="text-end" id="totalDescuento">-S/ 0.00</td>
+                </tr>
+                <tr>
+                    <td class="text-end">Impuestos:</td>
+                    <td class="text-end" id="totalImpuesto">S/ 0.00</td>
+                </tr>
+                <tr>
+                    <td class="text-end">
+                        <div class="form-check form-switch d-inline-block me-2">
+                           
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                id="retenciones"
+                                onchange="calcularTotales()"
+                            >
+                        
+                        </div>
+                        Retenciones:
+                    </td>
+                    <td class="text-end" id="totalRetencion">-S/ 0.00</td>
+                </tr>
+                <tr>
+                    <td class="text-end">Total Compra:</td>
+                    <td class="text-end total-final" id="totalCompra">S/ 0.00</td>
+                </tr>
+            </table>
+
+            <div class="acciones-compra">
+                <button class="btn-comprar" type="button" onclick="abrirModalPagoCompra()">
+                    Comprar
+                </button>
+
+                <button class="btn-espera" type="button" onclick="guardarCompraEspera()">
+                    Espera
+                </button>
+
+                <button class="btn-cancelar" onclick="limpiarCompra()" type="button">
+                    Cancelar
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+<div id="modalDescuento" class="modal-custom" style="display:none;">
+    <div class="modal-descuento">
+
+        <div class="modal-header-pos">
+            <span>Descuento global de la compra</span>
+
+            <button type="button" onclick="cerrarModalDescuento()" class="btn-close-pos">
+                ×
+            </button>
+        </div>
+
+        <div class="modal-body-pos">
+
+            <div class="row mb-3">
+
+                <div class="col-md-6">
+                    <label class="fw-bold">Tipo</label>
+                    <select id="tipoDescuentoGlobal" class="form-select">
+                        <option value="PORCENTAJE">Porcentaje</option>
+                        <option value="MONTO">Monto fijo</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="fw-bold">Descuento</label>
+                    <input
+                        type="number"
+                        id="valorDescuentoGlobal"
+                        class="form-control"
+                        value="0"
+                        min="0"
+                        step="0.01"
+                        oninput="calcularVistaDescuento()"
+                    >
+                </div>
+
+            </div>
+
+            <table class="table table-borderless">
+                <tr>
+                    <td class="text-end fw-bold">Subtotal:</td>
+                    <td class="text-end fw-bold" id="modalSubtotal">S/ 0.00</td>
+                </tr>
+
+                <tr>
+                    <td class="text-end fw-bold">Descuento:</td>
+                    <td class="text-end fw-bold" id="modalDescuentoValor">S/ 0.00</td>
+                </tr>
+
+                <tr>
+                    <td class="text-end fw-bold">Total:</td>
+                    <td class="text-end fw-bold" id="modalTotal">S/ 0.00</td>
+                </tr>
+            </table>
+
+            <div class="text-end mt-4">
+                <button class="btn btn-primary px-4" onclick="aplicarDescuentoGlobal()">
+                    Aplicar
+                </button>
+
+                <button class="btn btn-secondary px-4" onclick="cerrarModalDescuento()">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+</div>
+
+<div id="modalPagoCompra" class="modal-custom" style="display:none;">
+
+    <div class="modal-pago-compra">
+
+        <div class="modal-header-pos">
+            <span>Información de pago de compra</span>
+
+            <button type="button" onclick="cerrarModalPagoCompra()" class="btn-close-pos">
+                ×
+            </button>
+        </div>
+
+        <div class="modal-body-pos">
+
+            <div class="mb-3">
+                <label class="fw-bold">Bodega</label>
+                <select id="pagoSede" class="form-select">
+                    <option value="">SELECCIONAR...</option>
+                    {% for sede in sedes %}
+                        <option value="{{ sede.id }}">{{ sede.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="fw-bold">COD FACTURA</label>
+                    <input id="pagoComprobante" class="form-control" readonly>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="fw-bold">FECHA COMPRA</label>
+                    <input id="pagoFecha" type="date" class="form-control">
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="fw-bold">Proveedor</label>
+                    <select id="pagoProveedor" class="form-select">
+                        <option value="">Buscar proveedor</option>
+                        {% for proveedor in proveedores %}
+                            <option value="{{ proveedor.id }}">{{ proveedor.razon_social }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="fw-bold">&nbsp;</label>
+                    <button type="button"class="btn btn-primary w-100"onclick="abrirModalProveedor()">
+                        Crear Proveedor
+                    </button>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="fw-bold">Metodo de pago</label>
+                    <select id="pagoMetodo" class="form-select">
+                        <option value="EFECTIVO">EFECTIVO</option>
+                        <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                        <option value="YAPE">YAPE</option>
+                        <option value="PLIN">PLIN</option>
+                    </select>
+                </div>
+
+                <select id="pagoCaja" class="form-select">
+                    <option value="">SELECCIONE...</option>
+                    <option value="SI">SÍ</option>
+                    <option value="NO">NO</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="fw-bold">Observación</label>
+                <textarea id="pagoObservacion" class="form-control" rows="3"></textarea>
+            </div>
+
+            <div class="row align-items-center">
+                <div class="col-md-6 text-center fw-bold">
+                    TOTAL A PAGAR
+                </div>
+
+                <div class="col-md-6">
+                    <input
+                        id="pagoTotal"
+                        class="form-control text-center fw-bold"
+                        readonly
+                    >
+                </div>
+            </div>
+
+            <div class="text-end mt-4">
+                <button class="btn btn-primary px-4" onclick="procesarCompraPagada()">
+                    Procesar
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+<div id="modalProveedor" class="modal-custom" style="display:none;">
+
+    <div class="modal-proveedor">
+
+        <div class="modal-header-pos">
+            <span>Crear Proveedor</span>
+
+            <button type="button" onclick="cerrarModalProveedor()" class="btn-close-pos">
+                ×
+            </button>
+        </div>
+
+        <div class="modal-body-pos">
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <label class="fw-bold">Tipo de Documento</label>
+                    <select id="provTipoDocumento" class="form-select">
+                        <option value="RUC">RUC</option>
+                        <option value="DNI">DNI</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="fw-bold">DNI / RUC</label>
+
+                    <div class="input-group">
+                        <input id="provNumeroDocumento" class="form-control">
+
+                        <button
+                            type="button"
+                            class="btn btn-primary"
+                            onclick="consultarDocumentoProveedor()"
+                        >
+                            Buscar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-md-12">
+                    <label class="fw-bold">Nombre / Razón social</label>
+                    <input id="provRazonSocial" class="form-control">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="fw-bold">Teléfono</label>
+                    <input id="provTelefono" class="form-control">
+                </div>
+
+                <div class="col-md-6">
+                    <label class="fw-bold">Correo Electrónico</label>
+                    <input id="provEmail" type="email" class="form-control">
+                </div>
+
+                <div class="col-md-12">
+                    <label class="fw-bold">Dirección</label>
+                    <input id="provDireccion" class="form-control">
+                </div>
+
+            </div>
+
+            <div class="text-center mt-4">
+                <button class="btn btn-primary px-4" onclick="guardarProveedorAjax()">
+                    OK
+                </button>
+
+                <button class="btn btn-secondary px-4" onclick="cerrarModalProveedor()">
+                    Cancel
+                </button>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div id="comprasEsperaTabs" class="compras-espera-tabs"></div>
+
+
+
+<script>
+    const productos = [];
+    let descuentoGlobalTipo = 'PORCENTAJE';
+    let descuentoGlobalValor = 0;
+
+    document.querySelectorAll('.producto-row').forEach(row => {
+        row.addEventListener('click', () => {
+            agregarProducto(row.dataset);
+        });
+    });
+
+    function numero(valor) {
+        if (!valor) return 0;
+        return Number(String(valor).replace(',', '.')) || 0;
+    }
+
+    function moneda(valor) {
+        return 'S/ ' + numero(valor).toFixed(2);
+    }
+
+    function agregarProducto(data) {
+        const existe = productos.find(p => p.producto_id === data.id);
+
+        if (existe) {
+            existe.cantidad += 1;
+        } else {
+            productos.push({
+                producto_id: data.id,
+                stock: numero(data.stock),
+                codigo: data.codigo,
+                nombre: data.nombre,
+                cantidad: 1,
+                precio_compra: numero(data.compra),
+                precio_venta: numero(data.venta),
+                descuento: 0,
+                retencion: 0,
+                impuesto: 18
+            });
+        }
+
+        renderDetalle();
+    }
+
+    function renderDetalle() {
+        const body = document.getElementById('detalleBody');
+        body.innerHTML = '';
+
+        if (productos.length === 0) {
+            body.innerHTML = `
+                <tr id="sinRegistros">
+                    <td colspan="10" class="text-center text-muted">
+                        Sin registros de productos agregados
+                    </td>
+                </tr>
+            `;
+            calcularTotales();
+            return;
+        }
+
+        productos.forEach((p, index) => {
+            const subtotal = p.cantidad * p.precio_compra;
+
+            body.innerHTML += `
+                <tr>
+                    <td>${p.stock}</td>
+
+                    <td class="text-start">
+                        ${p.nombre}<br>
+                        <small>Cod: ${p.codigo}</small>
+                    </td>
+
+                    <td>
+                        <input
+                            type="number"
+                            min="1"
+                            value="${p.cantidad}"
+                            class="form-control form-control-sm input-mini"
+                            onchange="cambiarCantidad(${index}, this.value)"
+                        >
+                    </td>
+
+                    <td>${moneda(p.precio_compra)}</td>
+
+                    <td>${p.impuesto}</td>
+
+                    <td>
+                        <input
+                            type="number"
+                            value="${p.precio_compra}"
+                            class="form-control form-control-sm input-mini"
+                            onchange="cambiarCompra(${index}, this.value)"
+                        >
+                    </td>
+ 
+                    
+                    <td>
+                        <input
+                            type="number"
+                            value="${p.precio_venta}"
+                            class="form-control form-control-sm input-mini"
+                            onchange="cambiarVenta(${index}, this.value)"
+                        >
+                    </td>
+
+                    <td>
+                        <input
+                            type="number"
+                            value="${p.retencion}"
+                            class="form-control form-control-sm input-mini"
+                            onchange="cambiarRetencion(${index}, this.value)"
+                        >
+                    </td>
+
+                    <td>
+                        <input
+                            type="number"
+                            value="${p.descuento}"
+                            class="form-control form-control-sm input-mini"
+                            onchange="cambiarDescuento(${index}, this.value)"
+                        >
+                    </td>
+
+
+                    <td>${moneda(subtotal)}</td>
+
+                    <td>
+                        <span class="remove-item" onclick="quitarProducto(${index})">
+                            <i class="bi bi-trash"></i>
+                        </span>
+                    </td>
+                </tr>
+            `;
+        });
+
+        calcularTotales();
+    }
+
+    function cambiarCantidad(index, value) {
+        productos[index].cantidad = numero(value);
+        renderDetalle();
+    }
+
+    function cambiarCompra(index, value) {
+        productos[index].precio_compra = numero(value);
+        renderDetalle();
+    }
+
+    function cambiarVenta(index, value) {
+        productos[index].precio_venta = numero(value);
+        renderDetalle();
+    }
+
+    function cambiarDescuento(index, value) {
+        productos[index].descuento = numero(value);
+        renderDetalle();
+    }
+
+    function cambiarRetencion(index, value) {
+        productos[index].retencion = numero(value);
+        renderDetalle();
+    }
+
+    function quitarProducto(index) {
+        productos.splice(index, 1);
+        renderDetalle();
+    }
+
+    function calcularTotales() {
+        let totalBruto = 0;
+        let totalDescuentoProducto = 0;
+        let totalImpuesto = 0;
+        let totalRetencion = 0;
+
+        productos.forEach(p => {
+            const bruto = p.cantidad * p.precio_compra;
+            const descuentoProducto = bruto * (p.descuento / 100);
+            const base = bruto - descuentoProducto;
+            const impuesto = base * (p.impuesto / 100);
+            const aplicarRetencion = document.getElementById('retenciones')?.checked;
+            const retencion = aplicarRetencion ? base * ((p.retencion || 0) / 100) : 0;
+
+            totalBruto += bruto;
+            totalDescuentoProducto += descuentoProducto;
+            totalImpuesto += impuesto;
+            totalRetencion += retencion;
+        });
+
+        let descuentoGlobal = 0;
+
+        if (descuentoGlobalTipo === 'PORCENTAJE') {
+            descuentoGlobal = totalBruto * (descuentoGlobalValor / 100);
+        } else {
+            descuentoGlobal = descuentoGlobalValor;
+        }
+
+        const descuentoTotal = totalDescuentoProducto + descuentoGlobal;
+        const total = totalBruto - descuentoTotal + totalImpuesto - totalRetencion;
+
+        document.getElementById('totalBruto').innerText = moneda(totalBruto);
+        document.getElementById('totalDescuento').innerText = '-S/ ' + descuentoTotal.toFixed(2);
+        document.getElementById('totalImpuesto').innerText = moneda(totalImpuesto);
+        document.getElementById('totalRetencion').innerText = '-S/ ' + totalRetencion.toFixed(2);
+        document.getElementById('totalCompra').innerText = moneda(total);
+    }
+
+    function abrirModalDescuento() {
+        document.getElementById('modalDescuento').style.display = 'flex';
+        calcularVistaDescuento();
+    }
+
+    function cerrarModalDescuento() {
+        document.getElementById('modalDescuento').style.display = 'none';
+    }
+
+    function calcularSubtotalCompra() {
+        let subtotal = 0;
+
+        productos.forEach(p => {
+            subtotal += p.cantidad * p.precio_compra;
+        });
+
+        return subtotal;
+    }
+
+    function calcularVistaDescuento() {
+        const subtotal = calcularSubtotalCompra();
+        const tipo = document.getElementById('tipoDescuentoGlobal').value;
+        const valor = numero(document.getElementById('valorDescuentoGlobal').value);
+
+        let descuento = 0;
+
+        if (tipo === 'PORCENTAJE') {
+            descuento = subtotal * (valor / 100);
+        } else {
+            descuento = valor;
+        }
+
+        const total = subtotal - descuento;
+
+        document.getElementById('modalSubtotal').innerText = moneda(subtotal);
+        document.getElementById('modalDescuentoValor').innerText = moneda(descuento);
+        document.getElementById('modalTotal').innerText = moneda(total);
+    }
+
+    function aplicarDescuentoGlobal() {
+        descuentoGlobalTipo = document.getElementById('tipoDescuentoGlobal').value;
+        descuentoGlobalValor = numero(document.getElementById('valorDescuentoGlobal').value);
+
+        cerrarModalDescuento();
+        calcularTotales();
+    }
+
+    function limpiarCompra() {
+        productos.length = 0;
+        renderDetalle();
+    }
+
+    function obtenerTotalesCompra() {
+        let totalBruto = 0;
+        let totalDescuentoProducto = 0;
+        let totalImpuesto = 0;
+        let totalRetencion = 0;
+
+        const aplicarRetencion = document.getElementById('retenciones')?.checked;
+
+        productos.forEach(p => {
+            const bruto = p.cantidad * p.precio_compra;
+            const descuentoProducto = bruto * (p.descuento / 100);
+            const base = bruto - descuentoProducto;
+            const impuesto = base * (p.impuesto / 100);
+            const retencion = aplicarRetencion ? base * ((p.retencion || 0) / 100) : 0;
+
+            totalBruto += bruto;
+            totalDescuentoProducto += descuentoProducto;
+            totalImpuesto += impuesto;
+            totalRetencion += retencion;
+        });
+
+        let descuentoGlobal = 0;
+
+        if (descuentoGlobalTipo === 'PORCENTAJE') {
+            descuentoGlobal = totalBruto * (descuentoGlobalValor / 100);
+        } else {
+            descuentoGlobal = descuentoGlobalValor;
+        }
+
+        const descuentoTotal = totalDescuentoProducto + descuentoGlobal;
+        const total = totalBruto - descuentoTotal + totalImpuesto - totalRetencion;
+
+        return {
+            subtotal: totalBruto,
+            descuento: descuentoTotal,
+            impuesto: totalImpuesto,
+            retencion: totalRetencion,
+            total: total
+        };
+    }
+
+    function abrirModalPagoCompra() {
+        document.getElementById('pagoComprobante').value = generarCodigoFacturaCompra();
+        if (productos.length === 0) {
+            alert('Agrega productos a la compra.');
+            return;
+        }
+
+        const totales = obtenerTotalesCompra();
+
+        document.getElementById('pagoTotal').value = moneda(totales.total);
+
+        const fecha = document.getElementById('pagoFecha');
+        const hoy = new Date();
+        fecha.value = hoy.toISOString().slice(0, 10);
+
+        document.getElementById('modalPagoCompra').style.display = 'flex';
+    }
+
+    function cerrarModalPagoCompra() {
+        document.getElementById('modalPagoCompra').style.display = 'none';
+    }
+
+    function procesarCompraPagada() {
+        guardarCompra('RECIBIDA');
+    }
+
+    function guardarCompraEspera() {
+        if (productos.length === 0) {
+            alert('Agrega productos a la compra.');
+            return;
+        }
+
+        guardarCompra('PENDIENTE');
+    }
+
+    function getCSRFToken() {
+        return '{{ csrf_token }}';
+    }
+
+    function guardarCompra(estadoCompra) {
+        const totales = obtenerTotalesCompra();
+
+        let proveedor = '';
+        let sede = '';
+        let numeroComprobante = '';
+        let observacion = '';
+
+        if (estadoCompra === 'RECIBIDA') {
+            proveedor = document.getElementById('pagoProveedor').value;
+            sede = document.getElementById('pagoSede').value;
+            numeroComprobante = document.getElementById('pagoComprobante').value;
+            observacion = document.getElementById('pagoObservacion').value;
+
+            if (!proveedor) {
+                alert('Seleccione un proveedor.');
+                return;
+            }
+
+            if (!sede) {
+                alert('Seleccione una bodega.');
+                return;
+            }
+        } else {
+            proveedor = 1;
+            sede = 1;
+            numeroComprobante = generarCodigoFacturaCompra();
+            observacion = 'Compra guardada en espera';
+        }
+
+        fetch("{% url 'compras:guardar_compra' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify({
+                proveedor: proveedor,
+                sede: sede,
+                tipo_comprobante: 'FACTURA',
+                numero_comprobante: numeroComprobante,
+                observacion: observacion,
+                subtotal: totales.subtotal,
+                impuesto: totales.impuesto,
+                total: totales.total,
+                descuento: totales.descuento,
+                retencion: totales.retencion,
+                estado: estadoCompra,
+                productos: productos
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.mensaje);
+
+            if (data.ok) {
+                cerrarModalPagoCompra();
+
+                if (estadoCompra === 'PENDIENTE') {
+                    crearPestanaEspera(data.id, data.codigo);
+                    limpiarCompra();
+                } else {
+                    limpiarCompra();
+                }
+            }
+        });
+    }
+
+    function generarCodigoFacturaCompra() {
+        const fecha = new Date();
+        const anio = fecha.getFullYear();
+        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+        const dia = String(fecha.getDate()).padStart(2, '0');
+        const hora = String(fecha.getHours()).padStart(2, '0');
+        const min = String(fecha.getMinutes()).padStart(2, '0');
+        const seg = String(fecha.getSeconds()).padStart(2, '0');
+
+        return `COMP-${anio}${mes}${dia}-${hora}${min}${seg}`;
+    }
+
+    function abrirModalProveedor() {
+        document.getElementById('modalProveedor').style.display = 'flex';
+    }
+
+    function cerrarModalProveedor() {
+        document.getElementById('modalProveedor').style.display = 'none';
+    }
+
+    function limpiarFormularioProveedor() {
+        document.getElementById('provNumeroDocumento').value = '';
+        document.getElementById('provRazonSocial').value = '';
+        document.getElementById('provTelefono').value = '';
+        document.getElementById('provEmail').value = '';
+        document.getElementById('provDireccion').value = '';
+    }
+
+    function consultarDocumentoProveedor() {
+        const tipo = document.getElementById('provTipoDocumento').value;
+        const numero = document.getElementById('provNumeroDocumento').value;
+
+        if (!numero) {
+            alert('Ingrese el número de documento.');
+            return;
+        }
+
+        fetch(`{% url 'compras:consultar_documento_proveedor_ajax' %}?tipo=${tipo}&numero=${numero}`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.ok) {
+                    alert(data.mensaje);
+                    return;
+                }
+
+                document.getElementById('provRazonSocial').value = data.nombre || '';
+                document.getElementById('provDireccion').value = data.direccion || '';
+            });
+    }
+
+    function guardarProveedorAjax() {
+        fetch("{% url 'compras:crear_proveedor_ajax' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify({
+                tipo_documento: document.getElementById('provTipoDocumento').value,
+                numero_documento: document.getElementById('provNumeroDocumento').value,
+                razon_social: document.getElementById('provRazonSocial').value,
+                telefono: document.getElementById('provTelefono').value,
+                email: document.getElementById('provEmail').value,
+                direccion: document.getElementById('provDireccion').value
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.mensaje);
+
+            if (data.ok) {
+                const selectProveedor = document.getElementById('pagoProveedor');
+
+                const option = document.createElement('option');
+                option.value = data.id;
+                option.text = data.nombre;
+                option.selected = true;
+
+                selectProveedor.appendChild(option);
+
+                limpiarFormularioProveedor();
+                cerrarModalProveedor();
+            }
+        });
+    }
+
+    let contadorComprasEspera = 0;
+    const comprasPendientesCargadas = new Set();
+
+    function limpiarTabsPendientes() {
+        document.getElementById('comprasEsperaTabs').innerHTML = '';
+        comprasPendientesCargadas.clear();
+        contadorComprasEspera = 0;
+    }
+
+    function crearPestanaEspera(compraId, codigoCompra) {
+        compraId = String(compraId);
+
+        if (comprasPendientesCargadas.has(compraId)) {
+            return;
+        }
+
+        comprasPendientesCargadas.add(compraId);
+        contadorComprasEspera++;
+
+        const contenedor = document.getElementById('comprasEsperaTabs');
+
+        const tab = document.createElement('div');
+        tab.className = 'tab-compra-espera';
+        tab.dataset.compraId = compraId;
+
+        tab.innerHTML = `
+            Compra #${contadorComprasEspera}
+            <span class="cerrar-tab">X</span>
+        `;
+
+        tab.addEventListener('click', function(event) {
+            if (event.target.classList.contains('cerrar-tab')) {
+                eliminarCompraPendiente(compraId, tab);
+                return;
+            }
+
+            cargarCompraPendienteDesdeBD(compraId);
+        });
+
+        contenedor.appendChild(tab);
+    }
+
+    function cargarCompraPendienteDesdeBD(compraId) {
+        fetch(`/compras/pendientes/${compraId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.ok) {
+                    alert(data.mensaje);
+                    return;
+                }
+
+                productos.length = 0;
+
+                data.productos.forEach(item => {
+                    productos.push({
+                        producto_id: String(item.producto_id),
+                        stock: item.stock,
+                        codigo: item.codigo,
+                        nombre: item.nombre,
+                        cantidad: Number(item.cantidad),
+                        precio_compra: Number(item.precio_compra),
+                        precio_venta: Number(item.precio_venta),
+                        descuento: Number(item.descuento || 0),
+                        retencion: Number(item.retencion || 0),
+                        impuesto: Number(item.impuesto || 18)
+                    });
+                });
+
+                renderDetalle();
+            });
+    }
+
+    function cargarComprasPendientesAlInicio() {
+        limpiarTabsPendientes();
+
+        fetch("{% url 'compras:listar_compras_pendientes' %}")
+            .then(response => response.json())
+            .then(data => {
+                if (!data.ok) {
+                    return;
+                }
+
+                data.compras.forEach(compra => {
+                    crearPestanaEspera(compra.id, compra.codigo);
+                });
+            });
+    }
+
+    function eliminarCompraPendiente(compraId, tab) {
+        if (!confirm('¿Deseas eliminar esta compra en espera?')) {
+            return;
+        }
+
+        fetch(`/compras/pendientes/${compraId}/eliminar/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken()
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.mensaje);
+
+            if (data.ok) {
+                tab.remove();
+                comprasPendientesCargadas.delete(String(compraId));
+            }
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        cargarComprasPendientesAlInicio();
+    });
+    
+</script>
+
+{% endblock %}
