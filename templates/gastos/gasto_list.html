@@ -1,0 +1,647 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}
+Historial de Gastos
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .modal-custom {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,.55);
+        z-index: 5000;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 32px;
+    }
+
+    .modal-gasto-pos {
+        width: 520px;
+         max-height: 88vh;
+        overflow-y: auto;
+        background: white;
+        border-radius: 8px;
+    }
+
+    .modal-header-pos {
+        background: #2d57a5;
+        color: white;
+        padding: 14px 20px;
+        font-size: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn-close-pos {
+        background: transparent;
+        border: none;
+        color: #c9d8ef;
+        font-size: 32px;
+        font-weight: bold;
+    }
+
+    .modal-body-pos {
+        padding: 28px;
+    }
+
+    .gasto-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px 28px;
+    }
+
+    .gasto-footer-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 35px;
+        align-items: end;
+    }
+
+    .sacar-caja-box {
+        background: #e5f5e8;
+        padding: 10px 14px;
+        border-radius: 8px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .modal-body-pos label {
+        margin-bottom: 6px;
+    }
+
+    .titulo-gastos {
+        text-align: center;
+        font-size: 26px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .gastos-card {
+        overflow-x: hidden;
+        background: white;
+        border-radius: 8px;
+        padding: 18px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.06);
+    }
+
+    .top-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        margin-bottom: 8px;
+    }
+
+    .export-box {
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .export-box i {
+        font-size: 28px;
+        margin-left: 8px;
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr) auto;
+        gap: 16px;
+        align-items: end;
+        margin-bottom: 24px;
+    }
+
+    .filter-grid label {
+        font-weight: bold;
+        font-size: 13px;
+        margin-bottom: 5px;
+    }
+
+    .filter-grid .form-control,
+    .filter-grid .form-select {
+        height: 32px;
+        font-size: 13px;
+        padding: 4px 8px;
+    }
+
+    .tabla-scroll {
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+    .tabla-gastos {
+        font-size: 14px;
+        margin-bottom: 0;
+    }
+
+    .tabla-gastos th {
+        background: #e7e7e7;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #d8d8d8;
+        padding: 12px 8px;
+        font-weight: bold;
+    }
+
+    .tabla-gastos td {
+        font-size: 14px;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #e1e1e1;
+        padding: 8px;
+        word-wrap: break-word;
+    }
+
+    .tabla-gastos textarea {
+        width: 100%;
+        height: 32px;
+        font-size: 13px;
+        resize: none;
+        padding: 4px;
+    }
+
+    .estado-procesado {
+        background: #5ba36a;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 12px;
+    }
+
+    .accion-icon {
+        font-size: 20px;
+        margin: 0 5px;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .print-icon {
+        color: #111;
+    }
+
+    .delete-icon {
+        color: red;
+    }
+
+    .total-gastos-row {
+        font-weight: bold;
+        background: #fff;
+    }
+
+    .col-descripcion {
+        width: 220px;
+    }
+
+    .col-fecha {
+        width: 160px;
+    }
+
+    .col-estado {
+        width: 120px;
+    }
+
+    .col-accion {
+        width: 110px;
+    }
+
+</style>
+
+
+<div class="container-fluid px-4">
+
+    <h1 class="titulo-gastos">
+        Historial de Gastos
+    </h1>
+
+    <div class="top-line">
+        <div>
+            <label>Por página</label>
+            <select class="form-select form-select-sm" style="width:90px;">
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+            </select>
+        </div>
+
+        <div class="export-box">
+            <div>Exportar</div>
+
+            <a href="{% url 'gastos:gasto_excel' %}">
+                <i class="bi bi-file-earmark-excel text-success"></i>
+            </a>
+
+            <a href="{% url 'gastos:gasto_pdf' %}">
+                <i class="bi bi-file-earmark-pdf text-danger"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="gastos-card">
+
+        <form method="get">
+            <div class="filter-grid">
+
+                <div>
+                    <label>Fecha Inicial</label>
+                    <input type="date" name="fecha_inicio" value="{{ fecha_inicio }}" class="form-control">
+                    <input type="time" class="form-control mt-1" value="00:00">
+                </div>
+
+                <div>
+                    <label>Fecha Final</label>
+                    <input type="date" name="fecha_fin" value="{{ fecha_fin }}" class="form-control">
+                    <input type="time" class="form-control mt-1" value="23:59">
+                </div>
+
+                <div>
+                    <label>Usuario</label>
+                    <select name="usuario" class="form-select">
+                        <option value="">TODOS</option>
+                        {% for usuario in usuarios %}
+                            <option value="{{ usuario.id }}" {% if usuario_id == usuario.id|stringformat:'s' %}selected{% endif %}>
+                                {{ usuario.username|upper }}
+                            </option>
+                        {% endfor %}
+                    </select>
+
+                    <label class="mt-2">Proveedor</label>
+                    <select name="proveedor" class="form-select">
+                        <option value="">TODOS</option>
+                        {% for proveedor in proveedores %}
+                            <option value="{{ proveedor.id }}" {% if proveedor_id == proveedor.id|stringformat:'s' %}selected{% endif %}>
+                                {{ proveedor.razon_social|upper }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label>Metodo de pago</label>
+                    <select name="metodo_pago" class="form-select">
+                        <option value="">TODOS</option>
+                        <option value="EFECTIVO" {% if metodo_pago == 'EFECTIVO' %}selected{% endif %}>EFECTIVO</option>
+                        <option value="YAPE" {% if metodo_pago == 'YAPE' %}selected{% endif %}>YAPE</option>
+                        <option value="PLIN" {% if metodo_pago == 'PLIN' %}selected{% endif %}>PLIN</option>
+                        <option value="TRANSFERENCIA" {% if metodo_pago == 'TRANSFERENCIA' %}selected{% endif %}>TRANSFERENCIA</option>
+                    </select>
+                </div>
+
+                <div>
+                    <button class="btn btn-primary btn-sm w-100">
+                        Consultar
+                    </button>
+                </div>
+
+                <div>
+                    <a
+                        href="{% url 'gastos:gasto_fijo_list' %}"
+                        class="btn btn-outline-primary btn-sm w-100"
+                    >
+                        Gastos Fijos
+                    </a>
+                </div>
+
+                <div>
+                    <button type="button" class="btn btn-primary btn-sm w-100" onclick="abrirModalGasto()">
+                        Nuevo Gasto
+                    </button>
+                </div>
+
+            </div>
+        </form>
+
+        <div class="tabla-scroll">
+            <table class="table tabla-gastos">
+                <table class="table table-bordered align-middle tabla-gastos">                
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Fecha y Hora</th>
+                        <th>Descripción Del Gasto</th>
+                        <th>Categoría</th>
+                        <th>Proveedor</th>
+                        <th>Responsable</th>
+                        <th>Metodo de pago</th>
+                        <th>Valor</th>
+                        <th>Egreso de Caja</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for gasto in gastos %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ gasto.fecha|date:"Y-m-d H:i:s" }}</td>
+                            <td>
+                                <textarea class="form-control" readonly>{{ gasto.descripcion }}</textarea>
+                            </td>
+                            <td>{{ gasto.categoria.nombre|upper }}</td>
+                            <td>
+                                {% if gasto.proveedor %}
+                                    {{ gasto.proveedor.razon_social|upper }}
+                                {% else %}
+                                    NULL
+                                {% endif %}
+                            </td>
+                            <td>{{ gasto.responsable.username|upper }}</td>
+                            <td>{{ gasto.metodo_pago|upper }}</td>
+                            <td>{{ gasto.valor|floatformat:0 }}</td>
+                            <td>{% if gasto.sacar_caja %}SI{% else %}NO{% endif %}</td>
+                            <td>
+                                <span class="estado-procesado">Procesado</span>
+                            </td>
+                            <td class="text-center">
+                                <a
+                                    href="javascript:void(0)"
+                                    onclick="marcarGastoFijo({{ gasto.id }})"                                    class="accion-icon"
+                                    class="accion-icon"
+                                    title="Marcar como gasto fijo"
+                                >
+                                    {% if gasto.es_fijo %}
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                    {% else %}
+                                        <i class="bi bi-star text-warning"></i>
+                                    {% endif %}
+                                </a>
+
+                                <a
+                                    href="{% url 'gastos:gasto_pdf'%}"
+                                    target="_blank"
+                                    class="accion-icon print-icon"
+                                    title="Imprimir"
+                                >
+                                    <i class="bi bi-printer"></i>
+                                </a>
+
+                                <a
+                                    href="javascript:void(0)"
+                                    onclick="eliminarGasto({{ gasto.id }})"
+                                    class="accion-icon delete-icon"
+                                    title="Eliminar"
+                                >
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="11" class="text-center text-muted py-4">
+                                No hay gastos registrados.
+                            </td>
+                        </tr>
+                    {% endfor %}
+
+                    <tr class="total-gastos-row">
+                        <td colspan="7"></td>
+                        <td class="text-end">TOTAL GASTOS</td>
+                        <td>{{ total_gastos|floatformat:0 }}</td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-3">
+            Paginas: 1
+        </div>
+
+    </div>
+</div>
+
+<div class="modal-custom" id="modalGastoCustom" style="display:none;">
+    <div class="modal-gasto-pos">
+
+        <div class="modal-header-pos">
+            <span>Agregar Nuevo Gasto</span>
+
+            <button
+                type="button"
+                class="btn-close-pos"
+                onclick="cerrarModalGasto()"
+            >
+                ×
+            </button>
+        </div>
+
+        <div class="modal-body-pos">
+
+            <form id="form-gasto">
+
+                <div class="gasto-grid">
+
+                    <div>
+                        <label class="fw-bold">FECHA GASTO</label>
+                        <input
+                            type="datetime-local"
+                            id="fecha_gasto"
+                            class="form-control form-control-sm"
+                        >
+                    </div>
+
+                    <div>
+                        <label class="fw-bold">Categoria</label>
+                        <select
+                            id="categoria"
+                            class="form-select form-select-sm"
+                            required
+                        >
+                            <option value="">SELECCIONAR...</option>
+
+                            {% for categoria in categorias %}
+                                <option value="{{ categoria.id }}">
+                                    {{ categoria.nombre|upper }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="fw-bold">Proveedor</label>
+                        <select
+                            id="proveedor"
+                            class="form-select form-select-sm"
+                        >
+                            <option value="">SELECCIONAR...</option>
+
+                            {% for proveedor in proveedores %}
+                                <option value="{{ proveedor.id }}">
+                                    {{ proveedor.razon_social|upper }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="fw-bold">Tipo de gasto</label>
+                        <select
+                            id="tipo_gasto"
+                            class="form-select form-select-sm"
+                        >
+                            <option value="CONTADO">CONTADO</option>
+                            <option value="CREDITO">CREDITO</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="fw-bold">Metodo de pago</label>
+                        <select
+                            id="metodo_pago_modal"
+                            class="form-select form-select-sm"
+                        >
+                            <option value="EFECTIVO">EFECTIVO</option>
+                            <option value="YAPE">YAPE</option>
+                            <option value="PLIN">PLIN</option>
+                            <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="mt-3">
+                    <label class="fw-bold">Descripcion</label>
+                    <textarea
+                        id="descripcion"
+                        class="form-control form-control-sm"
+                        placeholder="Escribe la descripcion del gasto"
+                        required
+                    ></textarea>
+                </div>
+
+                <div class="gasto-footer-grid mt-3">
+
+                    <div>
+                        <label class="fw-bold d-block text-center">Valor</label>
+                        <input
+                            type="number"
+                            id="valor"
+                            class="form-control form-control-sm"
+                            required
+                        >
+                    </div>
+
+                    <div class="sacar-caja-box">
+                        <input
+                            type="checkbox"
+                            id="sacar_caja"
+                            class="form-check-input"
+                        >
+
+                        <label>
+                            Sacar el valor de la caja
+                        </label>
+                    </div>
+
+                </div>
+
+                <div class="text-end mt-4">
+                    <button
+                        type="submit"
+                        class="btn btn-primary px-4"
+                    >
+                        Agregar
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block js %}
+
+<script>
+
+    document.getElementById(
+        'form-gasto'
+        ).addEventListener(
+        'submit',
+        async function(e){
+
+        e.preventDefault();
+
+        const response =
+        await fetch(
+        "{% url 'gastos:crear_gasto_ajax' %}",
+        {
+        method:'POST',
+        headers:{
+        'Content-Type':'application/json',
+        'X-CSRFToken':
+        '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            categoria: document.getElementById('categoria').value,
+            proveedor: document.getElementById('proveedor').value,
+            descripcion: document.getElementById('descripcion').value,
+            valor: document.getElementById('valor').value,
+            metodo_pago: document.getElementById('metodo_pago_modal').value,
+            tipo_gasto: document.getElementById('tipo_gasto').value,
+            sacar_caja: document.getElementById('sacar_caja').checked
+        })
+        }
+        );
+
+    location.reload();
+
+});
+
+function abrirModalGasto() {
+    document.getElementById('modalGastoCustom').style.display = 'flex';
+}
+
+function cerrarModalGasto() {
+    document.getElementById('modalGastoCustom').style.display = 'none';
+}
+
+function eliminarGasto(gastoId) {
+    if (!confirm('¿Eliminar gasto?')) {
+        return;
+    }
+
+    fetch(`/gastos/egresos/eliminar/${gastoId}/ajax/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.mensaje);
+        if (data.ok) {
+            location.reload();
+        }
+    });
+}
+
+function marcarGastoFijo(gastoId) {
+    fetch(`/gastos/fijos/marcar/${gastoId}/ajax/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.mensaje);
+        location.reload();
+    });
+}
+
+</script>
+
+
+{% endblock %}

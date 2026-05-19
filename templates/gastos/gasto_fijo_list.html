@@ -1,0 +1,284 @@
+{% extends 'base/base.html' %}
+{% block title %}Gastos Fijos{% endblock %}
+
+{% block content %}
+
+<style>
+    .page-title {
+        text-align: center;
+        font-size: 26px;
+        font-weight: bold;
+        margin-bottom: 18px;
+    }
+
+    .gasto-card {
+        background: white;
+        border-radius: 8px;
+        padding: 18px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.06);
+    }
+
+    .top-actions {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 28px;
+    }
+
+    .tabla-fijos {
+        font-size: 14px;
+    }
+
+    .tabla-fijos th {
+        background: #e7e7e7;
+        text-align: center;
+        padding: 12px;
+        border: 1px solid #ddd;
+    }
+
+    .tabla-fijos td {
+        text-align: center;
+        vertical-align: middle;
+        padding: 8px;
+        border: 1px solid #e1e1e1;
+    }
+
+    .tabla-fijos textarea {
+        height: 32px;
+        resize: none;
+        font-size: 13px;
+    }
+
+    .switch {
+        width: 46px;
+        height: 24px;
+        position: relative;
+        display: inline-block;
+    }
+
+    .switch input {
+        display: none;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #ccc;
+        border-radius: 24px;
+        transition: .3s;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background: white;
+        border-radius: 50%;
+        transition: .3s;
+    }
+
+    input:checked + .slider {
+        background: #0d6efd;
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(22px);
+    }
+
+    .accion-icon {
+        font-size: 22px;
+        margin: 0 5px;
+        text-decoration: none;
+        cursor: pointer;
+    }
+</style>
+
+<div class="container-fluid px-4">
+
+    <h1 class="page-title">
+        Gastos Fijos
+    </h1>
+
+    <div class="gasto-card">
+
+        <div class="top-actions">
+            <a href="{% url 'gastos:gasto_list' %}" class="btn btn-primary">
+                Nuevo Gasto Fijo
+            </a>
+
+            <button
+                type="button"
+                class="btn btn-primary"
+                onclick="aplicarGastosFijos()"
+            >
+                Aplicar Gastos
+            </button>
+
+            <a href="{% url 'gastos:gasto_list' %}" class="btn btn-primary">
+                Regresar
+            </a>
+        </div>
+
+        <table class="table tabla-fijos align-middle">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Descripción Del Gasto</th>
+                    <th>Categoría</th>
+                    <th>Proveedor</th>
+                    <th>Metodo de pago</th>
+                    <th>Fecha Aplicación</th>
+                    <th>Valor</th>
+                    <th>Pagar</th>
+                    <th>Sacar Caja</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for gasto in gastos_fijos %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+
+                        <td>
+                            <textarea class="form-control" readonly>{{ gasto.descripcion }}</textarea>
+                        </td>
+
+                        <td>{{ gasto.categoria.nombre|upper }}</td>
+
+                        <td>
+                            {% if gasto.proveedor %}
+                                {{ gasto.proveedor.razon_social|upper }}
+                            {% else %}
+                                NULL
+                            {% endif %}
+                        </td>
+
+                        <td>{{ gasto.metodo_pago|upper }}</td>
+
+                        <td>
+                            {% if gasto.fecha_aplicacion %}
+                                {{ gasto.fecha_aplicacion|date:"Y-m-d" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td>{{ gasto.valor|floatformat:0 }}</td>
+
+                        <td>
+                            <label class="switch">
+                                <input
+                                    type="checkbox"
+                                    {% if gasto.pagar_fijo %}checked{% endif %}
+                                    onchange="actualizarFijo({{ gasto.id }})"
+                                    id="pagar_{{ gasto.id }}"
+                                >
+                                <span class="slider"></span>
+                            </label>
+                        </td>
+
+                        <td>
+                            <label class="switch">
+                                <input
+                                    type="checkbox"
+                                    {% if gasto.sacar_caja_fijo %}checked{% endif %}
+                                    onchange="actualizarFijo({{ gasto.id }})"
+                                    id="caja_{{ gasto.id }}"
+                                >
+                                <span class="slider"></span>
+                            </label>
+                        </td>
+
+                        <td>
+                            <a
+                                href="javascript:void(0)"
+                                onclick="quitarFijo({{ gasto.id }})"
+                                class="accion-icon text-danger"
+                                title="Quitar gasto fijo"
+                            >
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="10" class="text-center text-muted py-4">
+                            No hay gastos fijos registrados. Vuelve al historial y marca un gasto con la estrella.
+                        </td>
+                    </tr>
+                {% endfor %}
+
+                <tr class="fw-bold">
+                    <td colspan="6"></td>
+                    <td class="text-end">TOTAL GASTOS</td>
+                    <td>{{ total_gastos|floatformat:0 }}</td>
+                    <td colspan="2"></td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+
+</div>
+
+<script>
+function actualizarFijo(gastoId) {
+    fetch(`/gastos/fijos/actualizar/${gastoId}/ajax/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            pagar_fijo: document.getElementById(`pagar_${gastoId}`).checked,
+            sacar_caja_fijo: document.getElementById(`caja_${gastoId}`).checked
+        })
+    });
+}
+
+function quitarFijo(gastoId) {
+    if (!confirm('¿Quitar este gasto de gastos fijos?')) {
+        return;
+    }
+
+    fetch(`/gastos/fijos/marcar/${gastoId}/ajax/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        location.reload();
+    });
+}
+
+function aplicarGastosFijos() {
+    if (!confirm('¿Estás seguro? Se aplicarán los gastos fijos seleccionados.')) {
+        return;
+    }
+
+    fetch(`/gastos/fijos/aplicar/ajax/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.mensaje);
+        if (data.ok) {
+            window.location.href = "{% url 'gastos:gasto_list' %}";
+        }
+    });
+}
+</script>
+
+{% endblock %}

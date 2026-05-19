@@ -8,6 +8,7 @@ from core.views.home import home
 from django.urls import path, include
 
 urlpatterns = [
+    
     path('admin/', admin.site.urls),
     path('', home, name='home'),
     path('productos/', include('productos.urls.producto_urls')),
@@ -22,7 +23,6 @@ urlpatterns = [
     path('password-change/done/',auth_views.PasswordChangeDoneView.as_view(template_name='usuarios/password_change_done.html'),name='password_change_done'),
     path('inventario/', include('inventario.urls.sede_urls')),
     path('compras/', include('compras.urls.compra_urls')),
-    path('gastos/',include('gastos.urls')),
     path('gastos/',include('gastos.urls')),
 ]
 
