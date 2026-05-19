@@ -1,6 +1,7 @@
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.shortcuts import render
+from django.db.models import Q
 
 from clientes.forms import ClienteForm
 from clientes.models import Cliente
@@ -36,15 +37,23 @@ def buscar_documento(request):
 
 @vendedor_required
 def cliente_list(request):
-    clientes = Cliente.objects.all().order_by(
-        'nombre'
-    )
+    buscar = request.GET.get('buscar', '').strip()
+
+    clientes = Cliente.objects.all().order_by('nombre')
+
+    if buscar:
+        clientes = clientes.filter(
+            Q(nombre__icontains=buscar) |
+            Q(numero_documento__icontains=buscar) |
+            Q(tipo_documento__icontains=buscar)
+        )
 
     return render(
         request,
         'clientes/cliente_list.html',
         {
-            'clientes': clientes
+            'clientes': clientes,
+            'buscar': buscar
         }
     )
 

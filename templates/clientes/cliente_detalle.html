@@ -1,0 +1,201 @@
+{% extends 'base/base.html' %}
+{% block title %}Detalle Cliente{% endblock %}
+{% block content %}
+
+<style>
+.page-title{
+    font-size:32px;
+    font-weight:bold;
+}
+
+.card-custom{
+    background:white;
+    border-radius:10px;
+    padding:14px;
+    box-shadow:0 3px 12px rgba(0,0,0,.06);
+}
+
+.layout{
+    display:grid;
+    grid-template-columns:48% 52%;
+    gap:14px;
+}
+
+.tabla-custom{
+    font-size:13px;
+}
+
+.tabla-custom th{
+    background:#e7e7e7;
+    text-align:center;
+    border:1px solid #ddd;
+    padding:8px;
+}
+
+.tabla-custom td{
+    border:1px solid #e1e1e1;
+    padding:6px;
+    text-align:center;
+}
+
+.estado-pagado{
+    background:#5ba36a;
+    color:white;
+    padding:4px 10px;
+    border-radius:6px;
+    font-size:12px;
+    font-weight:bold;
+}
+</style>
+
+<div class="container-fluid px-4">
+
+    <div class="d-flex justify-content-between mb-4">
+        <div>
+            <div style="font-size:28px;">
+                Cliente:
+            </div>
+
+            <div class="page-title">
+                {{ cliente.nombre|upper }}
+            </div>
+        </div>
+
+        <div>
+            <a
+                href="{% url 'clientes:cliente_list' %}"
+                class="btn btn-primary"
+            >
+                Regresar
+            </a>
+        </div>
+    </div>
+
+    <div class="layout">
+
+        <div class="card-custom">
+
+            <table class="table tabla-custom">
+
+                <thead>
+                    <tr>
+                        <th colspan="5">
+                            Total Compras
+                        </th>
+                    </tr>
+
+                    <tr>
+                        <th>Método pago</th>
+                        <th>Total</th>
+                        <th>Devoluciones</th>
+                        <th>Notas Crédito</th>
+                        <th>Notas Débito</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                {% for metodo, data in resumen_metodos.items %}
+                    <tr>
+                        <td>{{ metodo }}</td>
+                        <td>
+                            S/ {{ data.total|floatformat:2 }}
+                        </td>
+                        <td>
+                            S/ {{ data.devoluciones|floatformat:2 }}
+                        </td>
+                        <td>
+                            {{ data.creditos }}
+                        </td>
+                        <td>
+                            {{ data.debitos }}
+                        </td>
+                    </tr>
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <div class="card-custom">
+
+            <div class="d-flex justify-content-between mb-3">
+
+                <div>
+                    <label>Por página</label>
+
+                    <select class="form-select form-select-sm"
+                    style="width:90px;">
+                        <option>10</option>
+                    </select>
+                </div>
+
+                <div>
+                    Exportar
+                    <a href="{% url 'clientes:exportar_detalle_cliente_excel' cliente.id %}">
+                        <i class="bi bi-file-earmark-excel text-success fs-3"></i>
+                    </a>
+                </div>
+
+            </div>
+
+            <h4 class="fw-bold">
+                Historial de Compra
+            </h4>
+
+            <table class="table tabla-custom">
+
+                <thead>
+                    <tr>
+                        <th>Factura</th>
+                        <th>Fecha y Hora</th>
+                        <th>Atendió</th>
+                        <th>Método Pago</th>
+                        <th>Total</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                {% for venta in ventas %}
+                    <tr>
+                        <td>{{ venta.codigo }}</td>
+
+                        <td>
+                            {{ venta.created|date:"Y-m-d H:i:s" }}
+                        </td>
+
+                        <td>
+                            {{ venta.usuario.username|upper }}
+                        </td>
+
+                        <td>
+                            {{ venta.metodo_pago }}
+                        </td>
+
+                        <td>
+                            S/ {{ venta.total|floatformat:2 }}
+                        </td>
+
+                        <td>
+                            <span class="estado-pagado">
+                                Pagado
+                            </span>
+                        </td>
+                    </tr>
+                {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
