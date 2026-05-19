@@ -16,6 +16,13 @@ from compras.views.exportar_historial_compra_views import exportar_historial_com
 from compras.views.exportar_historial_compra_views import exportar_historial_compras_pdf
 from compras.views.detalle_compra_views import detalle_compra_list
 from compras.views.detalle_compra_views import *
+from compras.views.compra_categoria_views import compras_por_categoria_list
+from compras.views.compra_categoria_views import compras_por_categoria_data
+from compras.views.compra_categoria_views import compras_por_categoria_excel
+from compras.views.compra_categoria_views import compras_por_categoria_pdf
+from compras.views.devolucion_compra_views import devolucion_compra_list
+from compras.views.devolucion_compra_views import devolucion_compra_excel
+from compras.views.devolucion_compra_views import devolucion_compra_pdf
 
 app_name = 'compras'
 
@@ -37,4 +44,11 @@ urlpatterns = [
     path('detalle/',detalle_compra_list,name='detalle_compra_list'),
     path('detalle/exportar/excel/',detalle_compra_excel,name='detalle_compra_excel'),
     path('detalle/exportar/pdf/',detalle_compra_pdf,name='detalle_compra_pdf'),
+    path('por-categorias/', compras_por_categoria_list, name='compras_por_categoria_list'),
+    path('por-categorias/data/',compras_por_categoria_data,name='compras_por_categoria_data'),
+    path('por-categorias/exportar/excel/',compras_por_categoria_excel,name='compras_por_categoria_excel'),
+    path('por-categorias/exportar/pdf/',compras_por_categoria_pdf,name='compras_por_categoria_pdf'),
+    path('devoluciones/',devolucion_compra_list,name='devolucion_compra_list'),
+    path('devoluciones/exportar/excel/',devolucion_compra_excel,name='devolucion_compra_excel'),
+    path('devoluciones/exportar/pdf/',devolucion_compra_pdf,name='devolucion_compra_pdf'),
 ]

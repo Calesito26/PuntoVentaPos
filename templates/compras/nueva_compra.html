@@ -129,10 +129,11 @@
     }
 
     .acciones-compra {
-        display: grid;
-        grid-template-columns: 1fr 190px 190px;
-        gap: 4px;
-        margin-top: 22px;
+        position: sticky;
+        bottom: 0;
+        background: white;
+        padding-top: 12px;
+        z-index: 100;
     }
 
     .btn-comprar {
@@ -208,19 +209,24 @@
     }
 
     .modal-body-pos {
-        padding: 24px;
+        padding: 16px;
     }
 
     .modal-pago-compra {
-        width: 980px;
-        max-width: 95%;
+        width: 880px;
+        max-width: 90%;
+        max-height: 88vh;
         background: white;
-        border-radius: 6px;
-        overflow: hidden;
+        border-radius: 8px;
+        overflow-y: auto;
     }
 
     .modal-pago-compra .modal-body-pos {
-        padding: 24px;
+        padding: 16px;
+    }
+
+    .modal-pago-compra label {
+        margin-bottom: 5px;
     }
 
     .modal-pago-compra label {
@@ -272,6 +278,14 @@
         margin-left: 10px;
         padding: 8px;
         border-radius: 0 5px 0 0;
+    }
+
+    .modal-footer {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        z-index: 100;
+        padding-top: 12px;
     }
 
 </style>

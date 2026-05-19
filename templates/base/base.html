@@ -194,8 +194,8 @@
                 <a href="{% url 'compras:nueva_compra' %}" class="submenu-item">Nueva Compra</a>
                 <a href="{% url 'compras:historial_compra_list' %}" class="submenu-item">Historial Compra</a>
                 <a href="{% url 'compras:detalle_compra_list' %}" class="submenu-item">Detalle de compras</a>
-                <a href="#" class="submenu-item">Compras por categorias </a>
-                <a href="#" class="submenu-item">Devolucion, notas de ajuste </a>
+                <a href="{% url 'compras:compras_por_categoria_list' %}" class="submenu-item">Compras por categorias </a>
+                <a href="{% url 'compras:devolucion_compra_list' %}" class="submenu-item">Devolucion, notas de ajuste </a>
             </div>
 
         </div>

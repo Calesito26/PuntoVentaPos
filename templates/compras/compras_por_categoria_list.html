@@ -1,0 +1,409 @@
+{% extends 'base/base.html' %}
+{% block title %}Compras por categorías{% endblock %}
+
+{% block content %}
+
+<style>
+    .page-title {
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 12px;
+    }
+
+    .categoria-card {
+        background: white;
+        border-radius: 8px;
+        padding: 18px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.06);
+    }
+
+    .top-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        margin-bottom: 10px;
+    }
+
+    .export-box {
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .export-box i {
+        font-size: 28px;
+        margin-left: 8px;
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: 280px 280px 280px 140px;
+        gap: 25px;
+        align-items: end;
+        margin-bottom: 22px;
+    }
+
+    .categoria-layout {
+        display: grid;
+        grid-template-columns: 52% 48%;
+        gap: 30px;
+    }
+
+    .categoria-box {
+        margin-bottom: 35px;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #ddd;
+    }
+
+    .categoria-header {
+        background: #e7e7e7;
+        font-weight: bold;
+        padding: 8px 12px;
+    }
+
+    .tabla-categoria {
+        font-size: 14px;
+        margin-bottom: 0;
+    }
+
+    .tabla-categoria th {
+        background: #e7e7e7;
+        text-align: center;
+        border: 1px solid #ddd;
+        padding: 10px;
+    }
+
+    .tabla-categoria td {
+        text-align: center;
+        border: 1px solid #e1e1e1;
+        padding: 7px;
+    }
+
+    .chart-box {
+        margin-bottom: 55px;
+        text-align: center;
+    }
+
+    .chart-title {
+        font-size: 22px;
+        font-weight: bold;
+        margin-top: 10px;
+    }
+
+    .chart-subtitle {
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 10px;
+    }
+
+    .chart-canvas {
+        max-width: 420px;
+        max-height: 420px;
+        margin: auto;
+    }
+
+    @media(max-width: 1200px) {
+        .filter-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .categoria-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="container-fluid px-4">
+
+    <h1 class="page-title">
+        Estado de Compras por Categorias
+    </h1>
+
+    <div class="top-line">
+
+        <div>
+            <label>Por página</label>
+
+            <select class="form-select form-select-sm" style="width:90px;">
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+            </select>
+        </div>
+
+        <div class="export-box">
+            <div>Exportar</div>
+
+            <a id="exportExcelCategorias" href="#">
+                <i class="bi bi-file-earmark-excel text-success"></i>
+            </a>
+
+            <a id="exportPdfCategorias" href="#">
+                <i class="bi bi-file-earmark-pdf text-danger"></i>
+            </a>
+        </div>
+
+    </div>
+
+    <div class="categoria-card">
+
+        <form method="get" id="formCategorias">
+
+            <div class="filter-grid">
+
+                <div>
+                    <label class="fw-bold">Fecha Inicial</label>
+
+                    <input
+                        type="date"
+                        name="fecha_inicio"
+                        value="{{ fecha_inicio }}"
+                        class="form-control form-control-sm"
+                    >
+
+                    <input
+                        type="time"
+                        class="form-control form-control-sm mt-1"
+                        value="00:00"
+                    >
+                </div>
+
+                <div>
+                    <label class="fw-bold">Fecha Final</label>
+
+                    <input
+                        type="date"
+                        name="fecha_fin"
+                        value="{{ fecha_fin }}"
+                        class="form-control form-control-sm"
+                    >
+
+                    <input
+                        type="time"
+                        class="form-control form-control-sm mt-1"
+                        value="23:59"
+                    >
+                </div>
+
+                <div>
+                    <label class="fw-bold">Categoría</label>
+
+                    <select name="categoria" class="form-select form-select-sm">
+                        <option value="">TODAS LAS CATEGORIAS</option>
+
+                        {% for categoria in categorias %}
+                            <option
+                                value="{{ categoria.id }}"
+                                {% if categoria_id == categoria.id|stringformat:'s' %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ categoria.nombre|upper }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <button
+                        type="button"
+                        class="btn btn-primary btn-sm px-4"
+                        onclick="consultarCategoriasAjax()"
+                    >
+                        Consultar
+                    </button>
+                </div>
+
+            </div>
+
+        </form>
+
+        <div class="categoria-layout">
+
+            <div id="tablaCategoriasContainer">
+                <div class="text-center text-muted py-5">
+                    Cargando compras por categorías...
+                </div>
+            </div>
+
+            <div id="graficasCategoriasContainer">
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    let chartsCategorias = [];
+
+    function obtenerParametrosCategorias() {
+        const form = document.getElementById('formCategorias');
+        return new URLSearchParams(new FormData(form)).toString();
+    }
+
+    function actualizarLinksExportar() {
+        const params = obtenerParametrosCategorias();
+
+        document.getElementById('exportExcelCategorias').href =
+            `{% url 'compras:compras_por_categoria_excel' %}?${params}`;
+
+        document.getElementById('exportPdfCategorias').href =
+            `{% url 'compras:compras_por_categoria_pdf' %}?${params}`;
+    }
+
+    function destruirGraficas() {
+        chartsCategorias.forEach(chart => chart.destroy());
+        chartsCategorias = [];
+    }
+
+    function consultarCategoriasAjax() {
+        const params = obtenerParametrosCategorias();
+
+        fetch(`{% url 'compras:compras_por_categoria_data' %}?${params}`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.ok) {
+                    alert('No se pudo cargar la información.');
+                    return;
+                }
+
+                renderTablasCategorias(data.grupos);
+                renderGraficasCategorias(data.grupos);
+                actualizarLinksExportar();
+            })
+            .catch(error => {
+                console.error(error);
+                alert('Error cargando compras por categorías.');
+            });
+    }
+
+    function renderTablasCategorias(grupos) {
+        const container = document.getElementById('tablaCategoriasContainer');
+        container.innerHTML = '';
+
+        if (grupos.length === 0) {
+            container.innerHTML = `
+                <div class="text-center text-muted py-5">
+                    No hay compras por categorías registradas.
+                </div>
+            `;
+            return;
+        }
+
+        grupos.forEach(grupo => {
+            let filas = '';
+
+            grupo.productos.forEach((producto, index) => {
+                filas += `
+                    <tr>
+                        <td>${index + 1}</td>
+                        <td class="text-start">${producto.producto.toUpperCase()}</td>
+                        <td>${producto.cantidad} Und</td>
+                        <td>S/ ${producto.valor_compra.toFixed(2)}</td>
+                        <td>S/ 0.00</td>
+                        <td>S/ ${producto.valor_comprado.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            container.innerHTML += `
+                <div class="categoria-box">
+                    <div class="categoria-header">
+                        ${grupo.categoria.toUpperCase()}
+                    </div>
+
+                    <table class="table tabla-categoria">
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Producto</th>
+                                <th>Cantidad</th>
+                                <th>Valor Compra</th>
+                                <th>Descuento</th>
+                                <th>Valor Comprado</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            ${filas}
+
+                            <tr class="fw-bold">
+                                <td colspan="5" class="text-end">
+                                    TOTAL COMPRAS
+                                </td>
+
+                                <td>
+                                    S/ ${grupo.total.toFixed(2)}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        });
+    }
+
+    function renderGraficasCategorias(grupos) {
+        destruirGraficas();
+
+        const container = document.getElementById('graficasCategoriasContainer');
+        container.innerHTML = '';
+
+        if (grupos.length === 0) {
+            return;
+        }
+
+        grupos.forEach((grupo, index) => {
+            container.innerHTML += `
+                <div class="chart-box">
+                    <div class="chart-title">PRODUCTOS MÁS COMPRADOS</div>
+
+                    <div class="chart-subtitle">
+                        CATEGORÍA: ${grupo.categoria.toUpperCase()}
+                    </div>
+
+                    <canvas
+                        id="chartCategoriaAjax${index}"
+                        class="chart-canvas"
+                    ></canvas>
+                </div>
+            `;
+        });
+
+        grupos.forEach((grupo, index) => {
+            const canvas = document.getElementById(`chartCategoriaAjax${index}`);
+
+            const chart = new Chart(canvas, {
+                type: 'pie',
+                data: {
+                    labels: grupo.labels,
+                    datasets: [{
+                        data: grupo.data
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+
+            chartsCategorias.push(chart);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        actualizarLinksExportar();
+        consultarCategoriasAjax();
+    });
+</script>
+
+{% endblock %}

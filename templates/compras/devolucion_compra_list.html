@@ -1,0 +1,303 @@
+{% extends 'base/base.html' %}
+{% block title %}Devoluciones Compras{% endblock %}
+
+{% block content %}
+
+<style>
+    .page-title {
+        text-align: center;
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 12px;
+    }
+
+    .top-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        margin-bottom: 10px;
+    }
+
+    .export-box {
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .export-box i {
+        font-size: 30px;
+        margin-left: 8px;
+    }
+
+    .devolucion-card {
+        background: white;
+        border-radius: 8px;
+        padding: 18px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.06);
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: 260px 260px 260px 140px 1fr;
+        gap: 30px;
+        align-items: end;
+        margin-bottom: 28px;
+    }
+
+    .search-row {
+        display: flex;
+        justify-content: end;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+
+    .tabla-devolucion {
+        font-size: 14px;
+    }
+
+    .tabla-devolucion th {
+        background: #e7e7e7;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #d8d8d8;
+        padding: 14px 8px;
+        font-weight: bold;
+    }
+
+    .tabla-devolucion td {
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #e1e1e1;
+        padding: 9px;
+    }
+
+    .estado-procesada {
+        background: #5ba36a;
+        color: white;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 12px;
+    }
+
+    .print-icon {
+        color: #111;
+        font-size: 22px;
+        text-decoration: none;
+    }
+
+    .total-row {
+        font-weight: bold;
+        background: #fff;
+    }
+</style>
+
+<div class="container-fluid px-4">
+
+    <h1 class="page-title">
+        Devoluciones Compras
+    </h1>
+
+    <div class="top-line">
+
+        <div>
+            <label>Por página</label>
+
+            <select class="form-select form-select-sm" style="width:90px;">
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+            </select>
+        </div>
+
+        <div class="export-box">
+            <div>Exportar</div>
+
+            <a href="{% url 'compras:devolucion_compra_excel' %}?fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}&usuario={{ usuario_id }}&buscar={{ buscar }}">
+                <i class="bi bi-file-earmark-excel text-success"></i>
+            </a>
+
+            <a href="{% url 'compras:devolucion_compra_pdf' %}?fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}&usuario={{ usuario_id }}&buscar={{ buscar }}">
+                <i class="bi bi-file-earmark-pdf text-danger"></i>
+            </a>
+        </div>
+
+    </div>
+
+    <div class="devolucion-card">
+
+        <form method="get">
+
+            <div class="filter-grid">
+
+                <div>
+                    <label class="fw-bold">Fecha Inicial</label>
+
+                    <input
+                        type="date"
+                        name="fecha_inicio"
+                        value="{{ fecha_inicio }}"
+                        class="form-control form-control-sm"
+                    >
+
+                    <input
+                        type="time"
+                        class="form-control form-control-sm mt-1"
+                        value="00:00"
+                    >
+                </div>
+
+                <div>
+                    <label class="fw-bold">Fecha Final</label>
+
+                    <input
+                        type="date"
+                        name="fecha_fin"
+                        value="{{ fecha_fin }}"
+                        class="form-control form-control-sm"
+                    >
+
+                    <input
+                        type="time"
+                        class="form-control form-control-sm mt-1"
+                        value="23:59"
+                    >
+                </div>
+
+                <div>
+                    <label class="fw-bold">Usuario</label>
+
+                    <select name="usuario" class="form-select form-select-sm">
+                        <option value="">TODOS</option>
+
+                        {% for usuario in usuarios %}
+                            <option
+                                value="{{ usuario.id }}"
+                                {% if usuario_id == usuario.id|stringformat:'s' %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ usuario.username|upper }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <button class="btn btn-primary btn-sm px-4">
+                        Consultar
+                    </button>
+                </div>
+
+                <div></div>
+
+            </div>
+
+            <div class="search-row">
+                <input
+                    type="text"
+                    name="buscar"
+                    value="{{ buscar }}"
+                    class="form-control form-control-sm"
+                    placeholder="Buscar Devolución"
+                    style="max-width: 320px;"
+                >
+
+                <button class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+
+        </form>
+
+        <div class="table-responsive">
+
+            <table class="table tabla-devolucion align-middle mb-0">
+
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Devolución</th>
+                        <th>Factura</th>
+                        <th>Fecha y hora</th>
+                        <th>Responsable</th>
+                        <th>Proveedor</th>
+                        <th>Valor</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for dev in devoluciones %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ dev.codigo }}</td>
+                            <td>{{ dev.compra.codigo }}</td>
+                            <td>{{ dev.fecha|date:"Y-m-d H:i:s" }}</td>
+                            <td>{{ dev.responsable.username|upper|default:"-" }}</td>
+                            <td>{{ dev.proveedor.razon_social|upper }}</td>
+                            <td>S/ {{ dev.valor|floatformat:2 }}</td>
+                            <td>
+                                <span class="estado-procesada">
+                                    Procesada
+                                </span>
+                            </td>
+                            <td>
+                                <a
+                                    href="{% url 'compras:devolucion_compra_pdf' %}?buscar={{ dev.codigo }}"
+                                    class="print-icon"
+                                    target="_blank"
+                                    title="Imprimir devolución"
+                                >
+                                    <i class="bi bi-printer-fill"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center text-muted py-5">
+                                No hay devoluciones de compras registradas.
+                            </td>
+                        </tr>
+                    {% endfor %}
+
+                    <tr class="total-row">
+                        <td colspan="6" class="text-start">
+                            Total: {{ devoluciones|length }}
+                        </td>
+                        <td>
+                            S/ {{ total_devoluciones|floatformat:2 }}
+                        </td>
+                        <td colspan="2"></td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div>Paginas: 1</div>
+
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item disabled">
+                        <a class="page-link">«</a>
+                    </li>
+
+                    <li class="page-item active">
+                        <a class="page-link">1</a>
+                    </li>
+
+                    <li class="page-item disabled">
+                        <a class="page-link">»</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

@@ -4,7 +4,7 @@ from django.shortcuts import render
 from compras.models import Compra
 from inventario.models import Sede
 from usuarios.decorators import administrador_required
-
+from compras.models import DevolucionCompra
 import json
 from django.http import JsonResponse
 from django.db import transaction
@@ -190,6 +190,18 @@ def procesar_devolucion_compra(request, pk):
         compra.total = Decimal('0.00')
 
     compra.save()
+
+    if total_devuelto > 0:
+        ultimo = DevolucionCompra.objects.count() + 1
+
+        DevolucionCompra.objects.create(
+            compra=compra,
+            codigo=f'DEV-{ultimo:06d}',
+            responsable=request.user,
+            proveedor=compra.proveedor,
+            valor=total_devuelto,
+            estado='PROCESADA'
+        )
 
     return JsonResponse({
         'ok': True,
