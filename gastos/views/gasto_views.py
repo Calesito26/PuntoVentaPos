@@ -8,7 +8,8 @@ from django.shortcuts import render, get_object_or_404
 
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-
+from django.views.decorators.http import require_POST
+from clientes.services.documento_service import DocumentoService
 from gastos.models.gasto import Gasto
 from gastos.models.categoria_gasto import CategoriaGasto
 from compras.models.proveedor import Proveedor
@@ -218,3 +219,34 @@ def gasto_pdf(request):
 
     pdf.save()
     return response
+
+
+def consultar_documento_proveedor_gasto_ajax(request):
+    tipo = request.GET.get('tipo', '').upper()
+    numero = request.GET.get('numero', '').strip()
+
+    if tipo == 'DNI':
+        resultado = DocumentoService.buscar_dni(numero)
+    elif tipo == 'RUC':
+        resultado = DocumentoService.buscar_ruc(numero)
+    else:
+        return JsonResponse({'ok': False, 'mensaje': 'Tipo inválido'})
+
+    return JsonResponse(resultado)
+
+
+def crear_proveedor_gasto_ajax(request):
+    data = json.loads(request.body)
+
+    proveedor = Proveedor.objects.create(
+        tipo_documento=data.get('tipo_documento'),
+        numero_documento=data.get('numero_documento'),
+        razon_social=data.get('razon_social'),
+        direccion=data.get('direccion', '')
+    )
+
+    return JsonResponse({
+        'ok': True,
+        'id': proveedor.id,
+        'nombre': proveedor.razon_social
+    })

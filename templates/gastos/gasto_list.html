@@ -470,6 +470,7 @@ Historial de Gastos
                         <select
                             id="proveedor"
                             class="form-select form-select-sm"
+                            onchange="validarProveedorNuevo()"
                         >
                             <option value="">SELECCIONAR...</option>
 
@@ -478,6 +479,8 @@ Historial de Gastos
                                     {{ proveedor.razon_social|upper }}
                                 </option>
                             {% endfor %}
+
+                            <option value="NUEVO">+ NUEVO PROVEEDOR</option>
                         </select>
                     </div>
 
@@ -556,6 +559,89 @@ Historial de Gastos
 
         </div>
 
+    </div>
+</div>
+
+
+<div class="modal-custom" id="modalProveedorGasto" style="display:none;">
+    <div class="modal-gasto-pos">
+
+        <div class="modal-header-pos">
+            <span>Nuevo Proveedor</span>
+
+            <button
+                type="button"
+                class="btn-close-pos"
+                onclick="cerrarModalProveedorGasto()"
+            >
+                ×
+            </button>
+        </div>
+
+        <div class="modal-body-pos">
+
+            <div class="gasto-grid">
+
+                <div>
+                    <label class="fw-bold">Tipo documento</label>
+                    <select id="proveedorTipoDocumento" class="form-select form-select-sm">
+                        <option value="DNI">DNI</option>
+                        <option value="RUC">RUC</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="fw-bold">Número documento</label>
+                    <input
+                        type="text"
+                        id="proveedorNumeroDocumento"
+                        class="form-control form-control-sm"
+                        placeholder="DNI o RUC"
+                    >
+                </div>
+
+            </div>
+
+            <div class="mt-3">
+                <button
+                    type="button"
+                    class="btn btn-primary btn-sm"
+                    onclick="buscarDocumentoProveedorGasto()"
+                >
+                    Buscar
+                </button>
+            </div>
+
+            <div class="mt-3">
+                <label class="fw-bold">Nombre / Razón Social</label>
+                <input
+                    type="text"
+                    id="proveedorRazonSocial"
+                    class="form-control form-control-sm"
+                    required
+                >
+            </div>
+
+            <div class="mt-3">
+                <label class="fw-bold">Dirección</label>
+                <input
+                    type="text"
+                    id="proveedorDireccion"
+                    class="form-control form-control-sm"
+                >
+            </div>
+
+            <div class="text-end mt-4">
+                <button
+                    type="button"
+                    class="btn btn-primary px-4"
+                    onclick="guardarProveedorGasto()"
+                >
+                    Guardar proveedor
+                </button>
+            </div>
+
+        </div>
     </div>
 </div>
 
@@ -638,6 +724,73 @@ function marcarGastoFijo(gastoId) {
     .then(data => {
         alert(data.mensaje);
         location.reload();
+    });
+}
+
+function validarProveedorNuevo() {
+    const proveedor = document.getElementById('proveedor');
+
+    if (proveedor.value === 'NUEVO') {
+        document.getElementById('modalProveedorGasto').style.display = 'flex';
+        proveedor.value = '';
+    }
+}
+
+function cerrarModalProveedorGasto() {
+    document.getElementById('modalProveedorGasto').style.display = 'none';
+}
+
+function buscarDocumentoProveedorGasto() {
+    const tipo = document.getElementById('proveedorTipoDocumento').value;
+    const numero = document.getElementById('proveedorNumeroDocumento').value;
+
+    fetch(`/gastos/egresos/proveedor/documento/ajax/?tipo=${tipo}&numero=${numero}`)
+        .then(response => response.json())
+        .then(data => {
+            if (!data.ok) {
+                alert(data.mensaje || 'No se encontró información.');
+                return;
+            }
+
+            document.getElementById('proveedorRazonSocial').value =
+                data.nombre || data.razon_social || '';
+
+            document.getElementById('proveedorDireccion').value =
+                data.direccion || '';
+        });
+}
+
+function guardarProveedorGasto() {
+    fetch(`/gastos/egresos/proveedor/crear/ajax/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            tipo_documento: document.getElementById('proveedorTipoDocumento').value,
+            numero_documento: document.getElementById('proveedorNumeroDocumento').value,
+            razon_social: document.getElementById('proveedorRazonSocial').value,
+            direccion: document.getElementById('proveedorDireccion').value
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.ok) {
+            alert(data.mensaje || 'No se pudo crear proveedor.');
+            return;
+        }
+
+        const select = document.getElementById('proveedor');
+
+        const option = document.createElement('option');
+        option.value = data.id;
+        option.text = data.nombre;
+        option.selected = true;
+
+        select.appendChild(option);
+
+        cerrarModalProveedorGasto();
     });
 }
 
