@@ -1,0 +1,383 @@
+{% extends 'base/base.html' %}
+{% block title %}Categorías de Gastos{% endblock %}
+
+{% block content %}
+
+<style>
+    .page-title {
+        text-align: center;
+        font-size: 26px;
+        font-weight: bold;
+        margin-bottom: 12px;
+    }
+
+    .top-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        margin-bottom: 10px;
+    }
+
+    .export-box {
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .export-box i {
+        font-size: 30px;
+        margin-left: 8px;
+    }
+
+    .card-custom {
+        background: white;
+        border-radius: 8px;
+        padding: 18px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.06);
+    }
+
+    .toolbar {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 18px;
+    }
+
+    .scroll-tabla {
+        max-height: 470px;
+        overflow-y: auto;
+        border-radius: 14px;
+    }
+
+    .scroll-tabla::-webkit-scrollbar {
+        width: 7px;
+    }
+
+    .scroll-tabla::-webkit-scrollbar-thumb {
+        background: #c8c8c8;
+        border-radius: 10px;
+    }
+
+    .scroll-tabla::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .tabla-custom {
+        font-size: 14px;
+        margin-bottom: 0;
+    }
+
+    .tabla-custom th {
+        background: #e7e7e7;
+        text-align: center;
+        padding: 12px;
+        border: 1px solid #ddd;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+    }
+
+    .tabla-custom td {
+        padding: 8px;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #e1e1e1;
+    }
+
+    .estado-activo {
+        background: #5ba36a;
+        color: white;
+        padding: 3px 9px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .estado-inactivo {
+        background: #dc5c66;
+        color: white;
+        padding: 3px 9px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+
+    .accion-icon {
+        font-size: 22px;
+        margin: 0 5px;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .edit-icon {
+        color: #222;
+    }
+
+    .delete-icon {
+        color: red;
+    }
+
+    .modal-custom {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,.55);
+        z-index: 5000;
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 38px;
+    }
+
+    .modal-categoria {
+        width: 620px;
+        max-width: 92%;
+        background: white;
+        border-radius: 6px;
+        overflow: hidden;
+        box-shadow: 0 6px 18px rgba(0,0,0,.25);
+    }
+
+    .modal-header-pos {
+        background: #2d57a5;
+        color: white;
+        padding: 20px 24px;
+        font-size: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn-close-pos {
+        background: transparent;
+        border: none;
+        color: #c9d8ef;
+        font-size: 34px;
+        font-weight: bold;
+    }
+
+    .modal-body-pos {
+        padding: 26px 24px 24px;
+    }
+
+    .modal-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 28px;
+        align-items: end;
+    }
+
+    .modal-grid label {
+        font-weight: bold;
+        margin-bottom: 8px;
+    }
+
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 26px;
+    }
+</style>
+
+<div class="container-fluid px-4">
+
+    <h1 class="page-title">Categorias de Gastos</h1>
+
+    <div class="top-line">
+        <div>
+            <label>Por página</label>
+            <select class="form-select form-select-sm" style="width:90px;">
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+            </select>
+        </div>
+
+        <div class="export-box">
+            <div>Exportar</div>
+            <a href="{% url 'gastos:categoria_gasto_excel' %}">
+                <i class="bi bi-file-earmark-excel text-success"></i>
+            </a>
+
+            <a href="{% url 'gastos:categoria_gasto_pdf' %}">
+                <i class="bi bi-file-earmark-pdf text-danger"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="card-custom">
+
+        <form method="get">
+            <div class="toolbar">
+                <input
+                    type="text"
+                    name="buscar"
+                    value="{{ buscar }}"
+                    placeholder="Buscar por nombre"
+                    class="form-control form-control-sm"
+                    style="max-width: 280px;"
+                >
+
+                <button class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-search"></i>
+                </button>
+
+                <a
+                    href="{% url 'gastos:categoria_gasto_list' %}?nuevo=1"
+                    class="btn btn-primary btn-sm px-4"
+                >
+                    Nueva Categoria
+                </a>
+            </div>
+        </form>
+
+        <div class="scroll-tabla">
+            <table class="table tabla-custom align-middle">
+                <thead>
+                    <tr>
+                        <th style="width:80px;">Item</th>
+                        <th>Nombre</th>
+                        <th style="width:230px;">Estado</th>
+                        <th style="width:130px;">Acción</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for categoria in categorias %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ categoria.nombre|upper }}</td>
+                            <td>
+                                {% if categoria.activo %}
+                                    <span class="estado-activo">Activo</span>
+                                {% else %}
+                                    <span class="estado-inactivo">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a
+                                    href="{% url 'gastos:categoria_gasto_list' %}?editar={{ categoria.id }}"
+                                    class="accion-icon edit-icon"
+                                    title="Editar"
+                                >
+                                    <i class="bi bi-pencil-square"></i>
+                                </a>
+
+                                <a
+                                    href="{% url 'gastos:categoria_gasto_delete' categoria.id %}"
+                                    class="accion-icon delete-icon"
+                                    title="Eliminar"
+                                    onclick="return confirm('¿Eliminar categoría?')"
+                                >
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">
+                                No hay categorías registradas.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-3">
+            Paginas: 1
+        </div>
+
+    </div>
+</div>
+
+{% if mostrar_modal %}
+<div class="modal-custom">
+    <div class="modal-categoria">
+
+        <div class="modal-header-pos">
+            <span>
+                {% if categoria_editar %}
+                    Actualizar Categoria
+                {% else %}
+                    Nueva Categoria
+                {% endif %}
+            </span>
+
+            <a
+                href="{% url 'gastos:categoria_gasto_list' %}"
+                class="btn-close-pos text-decoration-none"
+            >
+                ×
+            </a>
+        </div>
+
+        <form method="post" action="{% url 'gastos:categoria_gasto_save' %}">
+            {% csrf_token %}
+
+            {% if categoria_editar %}
+                <input
+                    type="hidden"
+                    name="categoria_id"
+                    value="{{ categoria_editar.id }}"
+                >
+            {% endif %}
+
+            <div class="modal-body-pos">
+
+                <div class="modal-grid">
+
+                    <div>
+                        <label>Nombre</label>
+                        <input
+                            type="text"
+                            name="nombre"
+                            value="{% if categoria_editar %}{{ categoria_editar.nombre }}{% endif %}"
+                            class="form-control"
+                            required
+                        >
+                    </div>
+
+                    <div>
+                        <label>Estado</label>
+                        <select name="activo" class="form-select">
+                            <option value="True"
+                                {% if not categoria_editar or categoria_editar.activo %}
+                                    selected
+                                {% endif %}
+                            >
+                                ACTIVO
+                            </option>
+
+                            <option value="False"
+                                {% if categoria_editar and not categoria_editar.activo %}
+                                    selected
+                                {% endif %}
+                            >
+                                NO ACTIVO
+                            </option>
+                        </select>
+                    </div>
+
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn btn-primary px-4">
+                        {% if categoria_editar %}
+                            Actualizar
+                        {% else %}
+                            Guardar
+                        {% endif %}
+                    </button>
+                </div>
+
+            </div>
+        </form>
+
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
