@@ -14,6 +14,8 @@ from compras.views.historial_compra_views import eliminar_compra
 from compras.views.historial_compra_views import imprimir_compra
 from compras.views.exportar_historial_compra_views import exportar_historial_compras_excel
 from compras.views.exportar_historial_compra_views import exportar_historial_compras_pdf
+from compras.views.detalle_compra_views import detalle_compra_list
+from compras.views.detalle_compra_views import *
 
 app_name = 'compras'
 
@@ -32,4 +34,7 @@ urlpatterns = [
     path('historial/<int:pk>/imprimir/',imprimir_compra,name='imprimir_compra'),
     path('historial/exportar/excel/',exportar_historial_compras_excel,name='exportar_historial_compras_excel'),
     path('historial/exportar/pdf/',exportar_historial_compras_pdf,name='exportar_historial_compras_pdf'),
+    path('detalle/',detalle_compra_list,name='detalle_compra_list'),
+    path('detalle/exportar/excel/',detalle_compra_excel,name='detalle_compra_excel'),
+    path('detalle/exportar/pdf/',detalle_compra_pdf,name='detalle_compra_pdf'),
 ]

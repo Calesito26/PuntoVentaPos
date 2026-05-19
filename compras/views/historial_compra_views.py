@@ -178,6 +178,7 @@ def procesar_devolucion_compra(request, pk):
             stock.save()
 
         detalle.cantidad -= cantidad_devolver
+        detalle.cantidad_devuelta += cantidad_devolver
         detalle.subtotal = detalle.cantidad * detalle.precio_compra
         detalle.save()
 

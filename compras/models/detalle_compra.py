@@ -15,6 +15,9 @@ class DetalleCompra(models.Model):
     producto = models.ForeignKey(Producto, on_delete=models.PROTECT)
 
     cantidad = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    cantidad_devuelta = models.DecimalField( max_digits=10, decimal_places=2, default=0)
+    
     precio_compra = models.DecimalField(max_digits=12, decimal_places=2)
 
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)

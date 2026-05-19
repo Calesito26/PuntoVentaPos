@@ -1,0 +1,391 @@
+{% extends 'base/base.html' %}
+{% block title %}Detalle de compras{% endblock %}
+
+{% block content %}
+
+<style>
+    .page-title{
+        text-align:center;
+        font-size:28px;
+        font-weight:bold;
+        margin-bottom:15px;
+    }
+
+    .detalle-card{
+        background:#fff;
+        border-radius:8px;
+        padding:18px;
+        box-shadow:0 3px 12px rgba(0,0,0,.06);
+    }
+
+    .top-line{
+        display:flex;
+        justify-content:space-between;
+        align-items:end;
+        margin-bottom:15px;
+    }
+
+    .export-box{
+        text-align:center;
+        font-size:14px;
+    }
+
+    .export-box i{
+        font-size:30px;
+        margin-left:10px;
+    }
+
+    .filter-grid{
+        display:grid;
+        grid-template-columns:
+            220px
+            220px
+            220px
+            220px
+            140px;
+        gap:20px;
+        align-items:end;
+        margin-bottom:25px;
+    }
+
+    .search-row{
+        display:flex;
+        justify-content:end;
+        gap:10px;
+        margin-bottom:18px;
+    }
+
+    .tabla-detalle{
+        font-size:14px;
+    }
+
+    .tabla-detalle th{
+        background:#e9e9e9;
+        text-align:center;
+        border:1px solid #ddd;
+        padding:12px 8px;
+        font-weight:bold;
+        vertical-align:middle;
+    }
+
+    .tabla-detalle td{
+        border:1px solid #e5e5e5;
+        padding:10px;
+        vertical-align:middle;
+        text-align:center;
+    }
+
+    .total-row{
+        font-weight:bold;
+        background:#f8f8f8;
+    }
+</style>
+
+<div class="container-fluid px-4">
+
+    <h1 class="page-title">
+        Detalle de compras
+    </h1>
+
+    <div class="top-line">
+
+        <div>
+            <label>Por página</label>
+
+            <select
+                class="form-select form-select-sm"
+                style="width:90px;"
+            >
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+            </select>
+        </div>
+
+        <div class="export-box">
+            <div>Exportar</div>
+
+            <a href="{% url 'compras:detalle_compra_excel' %}?fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}&sede={{ sede_id }}&proveedor={{ proveedor_id }}&usuario={{ usuario_id }}&buscar={{ buscar }}">
+                <i class="bi bi-file-earmark-excel text-success"></i>
+            </a>
+
+            <a href="{% url 'compras:detalle_compra_pdf' %}?fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}&sede={{ sede_id }}&proveedor={{ proveedor_id }}&usuario={{ usuario_id }}&buscar={{ buscar }}">
+                <i class="bi bi-file-earmark-pdf text-danger"></i>
+            </a>
+        </div>
+
+    </div>
+
+    <div class="detalle-card">
+
+        <form method="get">
+
+            <div class="filter-grid">
+
+                <div>
+                    <label class="fw-bold">
+                        Fecha Inicial
+                    </label>
+
+                    <input
+                        type="date"
+                        name="fecha_inicio"
+                        value="{{ fecha_inicio }}"
+                        class="form-control form-control-sm"
+                    >
+
+                    <input
+                        type="time"
+                        class="form-control form-control-sm mt-1"
+                        value="00:00"
+                    >
+                </div>
+
+                <div>
+                    <label class="fw-bold">
+                        Fecha Final
+                    </label>
+
+                    <input
+                        type="date"
+                        name="fecha_fin"
+                        value="{{ fecha_fin }}"
+                        class="form-control form-control-sm"
+                    >
+
+                    <input
+                        type="time"
+                        class="form-control form-control-sm mt-1"
+                        value="23:59"
+                    >
+                </div>
+
+                <div>
+                    <label class="fw-bold">
+                        Usuario
+                    </label>
+
+                    <select
+                        name="usuario"
+                        class="form-select form-select-sm mb-2"
+                    >
+                        <option value="">
+                            TODOS
+                        </option>
+
+                        {% for usuario in usuarios %}
+                            <option
+                                value="{{ usuario.id }}"
+                                {% if usuario_id == usuario.id|stringformat:'s' %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ usuario.username|upper }}
+                            </option>
+                        {% endfor %}
+                    </select>
+
+                    <label class="fw-bold">
+                        Bodega
+                    </label>
+
+                    <select
+                        name="sede"
+                        class="form-select form-select-sm"
+                    >
+                        <option value="">
+                            TODAS
+                        </option>
+
+                        {% for sede in sedes %}
+                            <option
+                                value="{{ sede.id }}"
+                                {% if sede_id == sede.id|stringformat:'s' %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ sede.nombre|upper }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="fw-bold">
+                        Proveedor
+                    </label>
+
+                    <select
+                        name="proveedor"
+                        class="form-select form-select-sm"
+                    >
+                        <option value="">
+                            TODOS
+                        </option>
+
+                        {% for proveedor in proveedores %}
+                            <option
+                                value="{{ proveedor.id }}"
+                                {% if proveedor_id == proveedor.id|stringformat:'s' %}
+                                    selected
+                                {% endif %}
+                            >
+                                {{ proveedor.razon_social|upper }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <button
+                        class="btn btn-primary px-4"
+                    >
+                        Consultar
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="search-row">
+
+                <input
+                    type="text"
+                    name="buscar"
+                    value="{{ buscar }}"
+                    class="form-control form-control-sm"
+                    placeholder="Buscar producto o factura"
+                    style="max-width:300px;"
+                >
+
+                <button class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-search"></i>
+                </button>
+
+            </div>
+
+        </form>
+
+        <div class="table-responsive">
+
+            <table class="table tabla-detalle align-middle">
+
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Cód Factura</th>
+                        <th>Bodega</th>
+                        <th>Fecha Compra</th>
+                        <th>Doc. Proveedor</th>
+                        <th>Proveedor</th>
+                        <th>Cód Producto</th>
+                        <th>Producto</th>
+                        <th>Valor Compra</th>
+                        <th>% Desc</th>
+                        <th>Descuento</th>
+                        <th>Devuelto</th>
+                        <th>Cantidad</th>
+                        <th>Unidad</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+
+                    {% for detalle in detalles %}
+                    <tr>
+
+                        <td>
+                            {{ forloop.counter }}
+                        </td>
+
+                        <td>
+                            {{ detalle.compra.codigo }}
+                        </td>
+
+                        <td>
+                            {{ detalle.compra.sede.nombre|upper }}
+                        </td>
+
+                        <td>
+                            {{ detalle.compra.fecha_compra|date:"Y-m-d H:i:s" }}
+                        </td>
+
+                        <td>
+                            {{ detalle.compra.proveedor.numero_documento }}
+                        </td>
+
+                        <td>
+                            {{ detalle.compra.proveedor.razon_social|upper }}
+                        </td>
+
+                        <td>
+                            {{ detalle.producto.codigo }}
+                        </td>
+
+                        <td class="text-start">
+                            {{ detalle.producto.nombre|upper }}
+                        </td>
+
+                        <td>
+                            S/ {{ detalle.precio_compra|floatformat:2 }}
+                        </td>
+
+                        <td>
+                            0%
+                        </td>
+
+                        <td>
+                            S/ 0.00
+                        </td>
+
+                        <td>
+                           {{ detalle.cantidad_devuelta|floatformat:0 }}
+                        </td>
+
+                        <td>
+                            {{ detalle.cantidad|floatformat:0  }}
+                        </td>
+
+                        <td>
+                            Und
+                        </td>
+
+                        <td>
+                            S/ {{ detalle.subtotal|floatformat:2 }}
+                        </td>
+
+                    </tr>
+
+                    {% empty %}
+
+                    <tr>
+                        <td colspan="15" class="text-center py-5 text-muted">
+                            No hay detalles de compra registrados.
+                        </td>
+                    </tr>
+
+                    {% endfor %}
+
+                    <tr class="total-row">
+
+                        <td colspan="14" class="text-end">
+                            TOTAL:
+                        </td>
+
+                        <td>
+                            S/ {{ total_compras|floatformat:2 }}
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}
