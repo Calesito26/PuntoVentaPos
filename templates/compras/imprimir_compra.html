@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Compra {{ compra.codigo }}</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 30px;
+            color: #111;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .info {
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .info p {
+            margin: 4px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th {
+            background: #e7e7e7;
+            border: 1px solid #ccc;
+            padding: 8px;
+        }
+
+        td {
+            border: 1px solid #ddd;
+            padding: 7px;
+            text-align: center;
+        }
+
+        .text-start {
+            text-align: left;
+        }
+
+        .total {
+            margin-top: 20px;
+            text-align: right;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        @media print {
+            .no-print {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="no-print" style="text-align:right; margin-bottom:20px;">
+        <button onclick="window.print()">
+            Imprimir
+        </button>
+    </div>
+
+    <div class="header">
+        <h1>Comprobante de Compra</h1>
+        <p>{{ compra.codigo }}</p>
+    </div>
+
+    <div class="info">
+        <p><strong>Proveedor:</strong> {{ compra.proveedor.razon_social }}</p>
+        <p><strong>Documento:</strong> {{ compra.proveedor.numero_documento }}</p>
+        <p><strong>Bodega:</strong> {{ compra.sede.nombre }}</p>
+        <p><strong>Factura proveedor:</strong> {{ compra.numero_comprobante|default:"-" }}</p>
+        <p><strong>Fecha:</strong> {{ compra.fecha_compra|date:"d/m/Y H:i" }}</p>
+        <p><strong>Atendió:</strong> {{ compra.responsable.username|default:"-" }}</p>
+        <p><strong>Estado:</strong> {{ compra.estado }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Código</th>
+                <th>Producto</th>
+                <th>Cantidad</th>
+                <th>Precio compra</th>
+                <th>Subtotal</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for detalle in compra.detalles.all %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ detalle.producto.codigo }}</td>
+                    <td class="text-start">{{ detalle.producto.nombre }}</td>
+                    <td>{{ detalle.cantidad|floatformat:2 }}</td>
+                    <td>S/ {{ detalle.precio_compra|floatformat:2 }}</td>
+                    <td>S/ {{ detalle.subtotal|floatformat:2 }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="total">
+        Total compra: S/ {{ compra.total|floatformat:2 }}
+    </div>
+
+</body>
+</html>

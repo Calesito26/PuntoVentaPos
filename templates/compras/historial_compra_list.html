@@ -1,0 +1,585 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Historial de compras{% endblock %}
+
+{% block content %}
+
+<style>
+    .page-title {
+        text-align: center;
+        font-size: 26px;
+        font-weight: bold;
+        margin-bottom: 12px;
+    }
+
+    .historial-card {
+        background: white;
+        border-radius: 8px;
+        padding: 18px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.06);
+    }
+
+    .top-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        margin-bottom: 10px;
+    }
+
+    .export-box {
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .export-box i {
+        font-size: 28px;
+        margin: 0 5px;
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: 260px 260px 260px 140px 1fr;
+        gap: 30px;
+        align-items: end;
+        margin-bottom: 28px;
+    }
+
+    .search-row {
+        display: flex;
+        justify-content: end;
+        gap: 8px;
+        margin-bottom: 20px;
+    }
+
+    .tabla-historial {
+        font-size: 14px;
+    }
+
+    .tabla-historial th {
+        background: #e7e7e7;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #d8d8d8;
+        padding: 12px 8px;
+        font-weight: bold;
+    }
+
+    .tabla-historial td {
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #e1e1e1;
+        padding: 8px;
+    }
+
+    .estado-pagado {
+        background: #5ba36a;
+        color: white;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 12px;
+    }
+
+    .estado-pendiente {
+        background: #f0ad4e;
+        color: white;
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 12px;
+    }
+
+    .action-icon {
+        font-size: 20px;
+        margin: 0 4px;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .print-icon { color: #333; }
+    .return-icon { color: #009b3a; }
+    .delete-icon { color: red; }
+
+    .modal-custom {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,.55);
+        z-index: 5000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-devolucion {
+        width: 860px;
+        max-width: 95%;
+        background: white;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .modal-header-pos {
+        background: #2d57a5;
+        color: white;
+        padding: 18px 24px;
+        font-size: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .btn-close-pos {
+        background: transparent;
+        border: none;
+        color: #c9d8ef;
+        font-size: 32px;
+        font-weight: bold;
+    }
+
+    .modal-body-pos {
+        padding: 24px;
+    }
+
+    .devolucion-card {
+        background: white;
+        border-radius: 10px;
+        padding: 18px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.06);
+    }
+
+    .devolucion-title {
+        text-align: center;
+        font-size: 26px;
+        font-weight: bold;
+    }
+
+    .tabla-devolucion th {
+        background: #e7e7e7;
+        text-align: center;
+        border: 1px solid #ddd;
+        padding: 10px;
+    }
+
+    .tabla-devolucion td {
+        text-align: center;
+        border: 1px solid #ddd;
+        padding: 8px;
+    }
+</style>
+
+<div class="container-fluid px-4">
+
+    <h1 class="page-title">Historial de compras</h1>
+
+    <div class="top-line">
+        <div>
+            <label>Por página</label>
+            <select class="form-select form-select-sm" style="width:90px;">
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+            </select>
+        </div>
+
+        <div class="export-box">
+            <div>Exportar</div>
+            <a href="{% url 'compras:exportar_historial_compras_excel' %}?fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}&estado={{ estado }}&sede={{ sede_id }}&buscar={{ buscar }}">
+                <i class="bi bi-file-earmark-excel text-success"></i>
+            </a>
+
+            <a href="{% url 'compras:exportar_historial_compras_pdf' %}?fecha_inicio={{ fecha_inicio }}&fecha_fin={{ fecha_fin }}&estado={{ estado }}&sede={{ sede_id }}&buscar={{ buscar }}">
+                <i class="bi bi-file-earmark-pdf text-danger"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="historial-card">
+
+        <form method="get">
+
+            <div class="filter-grid">
+
+                <div>
+                    <label class="fw-bold">Fecha Inicial</label>
+                    <input type="date" name="fecha_inicio" value="{{ fecha_inicio }}" class="form-control form-control-sm">
+                    <input type="time" class="form-control form-control-sm mt-1" value="00:00">
+                </div>
+
+                <div>
+                    <label class="fw-bold">Fecha Final</label>
+                    <input type="date" name="fecha_fin" value="{{ fecha_fin }}" class="form-control form-control-sm">
+                    <input type="time" class="form-control form-control-sm mt-1" value="23:59">
+                </div>
+
+                <div>
+                    <label class="fw-bold">Estado</label>
+                    <select name="estado" class="form-select form-select-sm mb-2">
+                        <option value="">TODOS</option>
+                        <option value="RECIBIDA" {% if estado == 'RECIBIDA' %}selected{% endif %}>PAGADO</option>
+                        <option value="PENDIENTE" {% if estado == 'PENDIENTE' %}selected{% endif %}>PENDIENTE</option>
+                        <option value="ANULADA" {% if estado == 'ANULADA' %}selected{% endif %}>ANULADO</option>
+                    </select>
+
+                    <label class="fw-bold">Bodega</label>
+                    <select name="sede" class="form-select form-select-sm">
+                        <option value="">TODAS</option>
+                        {% for sede in sedes %}
+                            <option value="{{ sede.id }}" {% if sede_id == sede.id|stringformat:'s' %}selected{% endif %}>
+                                {{ sede.nombre|upper }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <button class="btn btn-primary btn-sm px-4">
+                        Buscar
+                    </button>
+                </div>
+
+
+            </div>
+
+            <div class="search-row">
+                <input
+                    type="text"
+                    name="buscar"
+                    value="{{ buscar }}"
+                    class="form-control form-control-sm"
+                    placeholder="Buscar por código o nombre del proveedor"
+                    style="max-width: 320px;"
+                >
+
+                <button class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-search"></i>
+                </button>
+            </div>
+
+        </form>
+
+        <div class="table-responsive">
+
+            <table class="table tabla-historial align-middle mb-0">
+
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Factura</th>
+                        <th>Bodega</th>
+                        <th>Factura Proveedor</th>
+                        <th>Fecha y hora</th>
+                        <th>Nombre del proveedor</th>
+                        <th>Atendió</th>
+                        <th>Método de pago</th>
+                        <th>Valor Compra</th>
+                        <th>Salió de caja</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for compra in compras %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td>{{ compra.codigo }}</td>
+                            <td>{{ compra.sede.nombre|upper }}</td>
+                            <td>{{ compra.numero_comprobante|default:"-" }}</td>
+                            <td>{{ compra.fecha_compra|date:"Y-m-d H:i:s" }}</td>
+                            <td>{{ compra.proveedor.razon_social|upper }}</td>
+                            <td>{{ compra.responsable.username|upper|default:"-" }}</td>
+                            <td>EFECTIVO</td>
+                            <td>S/ {{ compra.total|floatformat:2 }}</td>
+                            <td>SI</td>
+                            <td>
+                                {% if compra.estado == 'RECIBIDA' %}
+                                    <span class="estado-pagado">Pagado</span>
+                                {% elif compra.estado == 'PENDIENTE' %}
+                                    <span class="estado-pendiente">Pendiente</span>
+                                {% else %}
+                                    <span class="badge bg-danger">Anulado</span>
+                                {% endif %}
+                            </td>
+
+                            
+
+
+
+
+                            
+
+                            <td>
+
+                                <a
+                                    href="{% url 'compras:imprimir_compra' compra.id %}"
+                                    class="text-dark me-2"
+                                    target="_blank"
+                                    title="Imprimir compra"
+                                >
+                                    <i class="bi bi-printer-fill"></i>
+                                </a>
+
+                                <a
+                                    href="javascript:void(0)"
+                                    class="text-success me-2"
+                                    onclick="abrirModalDevolucion({{ compra.id }})"
+                                    title="Devolver compra"
+                                >
+                                    <i class="bi bi-arrow-return-left"></i>
+                                </a>
+
+                                <a
+                                    href="javascript:void(0)"
+                                    class="text-danger"
+                                    onclick="eliminarCompra({{ compra.id }})"
+                                    title="Eliminar compra"
+                                >
+                                    <i class="bi bi-trash-fill"></i>
+                                </a>
+
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="12" class="text-center py-5 text-muted">
+                                No hay compras registradas.
+                            </td>
+                        </tr>
+                    {% endfor %}
+
+                    <tr>
+                        <td colspan="8" class="fw-bold text-start">Total: {{ compras|length }}</td>
+                        <td class="fw-bold">S/ {{ total_compras|floatformat:2 }}</td>
+                        <td colspan="3"></td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mt-3">
+            <div>Paginas: 1</div>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item disabled"><a class="page-link">«</a></li>
+                    <li class="page-item active"><a class="page-link">1</a></li>
+                    <li class="page-item disabled"><a class="page-link">»</a></li>
+                </ul>
+            </nav>
+        </div>
+
+    </div>
+
+</div>
+
+<div id="modalDevolucion" class="modal-custom" style="display:none;">
+
+    <div class="modal-devolucion">
+
+        <div class="modal-header-pos">
+            <span id="devolucionTitulo">Realizar Devolución</span>
+
+            <button type="button" onclick="cerrarModalDevolucion()" class="btn-close-pos">
+                ×
+            </button>
+        </div>
+
+        <div class="modal-body-pos">
+
+            <p>
+                Número del documento:
+                <strong id="devolucionDocumento"></strong>
+            </p>
+
+            <p>
+                Nombre del proveedor:
+                <strong id="devolucionProveedor"></strong>
+            </p>
+
+            <div class="devolucion-card">
+
+                <h2 class="devolucion-title">Listado de productos</h2>
+
+                <p>
+                    Seleccione el método de pago que va a usar para hacer la devolución del dinero...
+                </p>
+
+                <div class="d-flex gap-2 mb-2">
+                    <select id="devolucionMetodoPago" class="form-select">
+                        <option value="EFECTIVO">EFECTIVO</option>
+                        <option value="TRANSFERENCIA">TRANSFERENCIA</option>
+                        <option value="YAPE">YAPE</option>
+                        <option value="PLIN">PLIN</option>
+                    </select>
+
+                    <button
+                        type="button"
+                        class="btn btn-success"
+                        onclick="procesarDevolucion()"
+                    >
+                        Devolver
+                    </button>
+                </div>
+
+                <table class="table tabla-devolucion align-middle">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Precio compra</th>
+                            <th>Descuento</th>
+                            <th>Unidades de compra</th>
+                            <th>Devolución</th>
+                            <th>Unidades a devolver</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="devolucionProductosBody">
+                    </tbody>
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    let compraDevolucionId = null;
+
+    function abrirModalDevolucion(compraId) {
+        compraDevolucionId = compraId;
+
+        fetch(`/compras/historial/${compraId}/devolucion/`)
+            .then(response => response.json())
+            .then(data => {
+                if (!data.ok) {
+                    alert(data.mensaje);
+                    return;
+                }
+
+                document.getElementById('devolucionTitulo').innerText =
+                    `Realizar Devolución - Factura No: ${data.codigo}`;
+
+                document.getElementById('devolucionDocumento').innerText =
+                    data.documento;
+
+                document.getElementById('devolucionProveedor').innerText =
+                    data.proveedor;
+
+                const body = document.getElementById('devolucionProductosBody');
+                body.innerHTML = '';
+
+                data.productos.forEach(item => {
+                    body.innerHTML += `
+                        <tr>
+                            <td class="text-start">${item.producto}</td>
+                            <td>S/ ${item.precio_compra.toFixed(2)}</td>
+                            <td>0.00%</td>
+                            <td>${item.cantidad} Und</td>
+                            <td>0</td>
+                            <td>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="${item.cantidad}"
+                                    value="0"
+                                    class="form-control form-control-sm devolucion-cantidad"
+                                    data-producto-id="${item.producto_id}"
+                                >
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                document.getElementById('modalDevolucion').style.display = 'flex';
+            });
+    }
+
+    function cerrarModalDevolucion() {
+        document.getElementById('modalDevolucion').style.display = 'none';
+    }
+
+    function getCSRFToken() {
+        return '{{ csrf_token }}';
+    }
+
+    window.procesarDevolucion = function () {
+        console.log('Botón devolver presionado');
+
+        const items = [];
+
+        document.querySelectorAll('.devolucion-cantidad').forEach(input => {
+            const cantidad = Number(input.value || 0);
+
+            if (cantidad > 0) {
+                items.push({
+                    producto_id: input.dataset.productoId,
+                    cantidad: cantidad
+                });
+            }
+        });
+
+        console.log('Items a devolver:', items);
+
+        if (items.length === 0) {
+            alert('Ingrese al menos una cantidad a devolver.');
+            return;
+        }
+
+        fetch(`/compras/historial/${compraDevolucionId}/devolver/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify({
+                items: items,
+                metodo_pago: document.getElementById('devolucionMetodoPago').value
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Respuesta backend:', data);
+            alert(data.mensaje);
+
+            if (data.ok) {
+                cerrarModalDevolucion();
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error en devolución:', error);
+            alert('Error procesando devolución. Revisa la consola.');
+        });
+    }
+
+    function eliminarCompra(compraId) {
+        if (!confirm('¿Seguro que deseas anular esta compra?')) {
+            return;
+        }
+
+        fetch(`/compras/historial/${compraId}/eliminar/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCSRFToken()
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.mensaje);
+
+            if (data.ok) {
+                location.reload();
+            }
+        });
+    }
+
+</script>
+
+{% endblock %}
