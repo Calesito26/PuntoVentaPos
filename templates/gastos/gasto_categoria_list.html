@@ -1,0 +1,315 @@
+{% extends 'base/base.html' %}
+{% block title %}Gastos por Categoría{% endblock %}
+
+{% block content %}
+
+<style>
+    .page-title {
+        text-align: center;
+        font-size: 26px;
+        font-weight: bold;
+        margin-bottom: 12px;
+    }
+
+    .top-line {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        margin-bottom: 10px;
+    }
+
+    .export-box {
+        text-align: center;
+        font-size: 14px;
+    }
+
+    .export-box i {
+        font-size: 28px;
+        margin-left: 8px;
+    }
+
+    .categoria-card {
+        background: white;
+        border-radius: 8px;
+        padding: 18px;
+        box-shadow: 0 3px 12px rgba(0,0,0,.06);
+    }
+
+    .filter-grid {
+        display: grid;
+        grid-template-columns: 260px 260px 260px 260px 140px;
+        gap: 30px;
+        align-items: end;
+        margin-bottom: 30px;
+    }
+
+    .filter-grid label {
+        font-weight: bold;
+        font-size: 13px;
+    }
+
+    .filter-grid .form-control,
+    .filter-grid .form-select {
+        height: 32px;
+        font-size: 13px;
+    }
+
+    .grupo-box {
+        margin-bottom: 30px;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid #ddd;
+    }
+
+    .grupo-header {
+        background: #dcdcdc;
+        padding: 14px 16px;
+        font-weight: bold;
+        font-size: 15px;
+    }
+
+    .tabla-gasto-categoria {
+        font-size: 14px;
+        margin-bottom: 0;
+    }
+
+    .tabla-gasto-categoria th {
+        background: #e7e7e7;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #d8d8d8;
+        padding: 12px 8px;
+        font-weight: bold;
+    }
+
+    .tabla-gasto-categoria td {
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #e1e1e1;
+        padding: 8px;
+    }
+
+    .tabla-gasto-categoria textarea {
+        width: 100%;
+        height: 40px;
+        resize: none;
+        font-size: 13px;
+        padding: 4px;
+    }
+
+    .estado-procesado {
+        background: #5ba36a;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 12px;
+    }
+
+    .resumen-linea {
+        font-size: 13px;
+        font-weight: bold;
+        text-align: right;
+        padding: 8px;
+    }
+</style>
+
+<div class="container-fluid px-4">
+
+    <h1 class="page-title">Gastos por Categoría</h1>
+
+    <div class="top-line">
+        <div>
+            <label>Por página</label>
+            <select class="form-select form-select-sm" style="width:90px;">
+                <option>10</option>
+                <option>25</option>
+                <option>50</option>
+            </select>
+        </div>
+
+        <div class="export-box">
+            <div>Exportar</div>
+
+            <a href="{% url 'gastos:gasto_categoria_excel' %}">
+                <i class="bi bi-file-earmark-excel text-success"></i>
+            </a>
+
+            <a href="{% url 'gastos:gasto_categoria_pdf' %}">
+                <i class="bi bi-file-earmark-pdf text-danger"></i>
+            </a>
+        </div>
+    </div>
+
+    <div class="categoria-card">
+
+        <form method="get">
+            <div class="filter-grid">
+
+                <div>
+                    <label>Fecha Inicial</label>
+                    <input type="date" name="fecha_inicio" value="{{ fecha_inicio }}" class="form-control">
+                    <input type="time" class="form-control mt-1" value="00:00">
+                </div>
+
+                <div>
+                    <label>Fecha Final</label>
+                    <input type="date" name="fecha_fin" value="{{ fecha_fin }}" class="form-control">
+                    <input type="time" class="form-control mt-1" value="23:59">
+                </div>
+
+                <div>
+                    <label>Categoria</label>
+                    <select name="categoria" class="form-select">
+                        <option value="">TODAS</option>
+                        {% for categoria in categorias %}
+                            <option value="{{ categoria.id }}" {% if categoria_id == categoria.id|stringformat:'s' %}selected{% endif %}>
+                                {{ categoria.nombre|upper }}
+                            </option>
+                        {% endfor %}
+                    </select>
+
+                    <label class="mt-2">Usuario</label>
+                    <select name="usuario" class="form-select">
+                        <option value="">TODOS</option>
+                        {% for usuario in usuarios %}
+                            <option value="{{ usuario.id }}" {% if usuario_id == usuario.id|stringformat:'s' %}selected{% endif %}>
+                                {{ usuario.username|upper }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label>Tipo gasto</label>
+                    <select name="tipo_gasto" class="form-select">
+                        <option value="">TODOS</option>
+                        <option value="CONTADO" {% if tipo_gasto == 'CONTADO' %}selected{% endif %}>CONTADO</option>
+                        <option value="CREDITO" {% if tipo_gasto == 'CREDITO' %}selected{% endif %}>CREDITO</option>
+                    </select>
+                </div>
+
+                <div>
+                    <button class="btn btn-primary btn-sm px-4">
+                        Consultar
+                    </button>
+                </div>
+
+            </div>
+        </form>
+
+        {% for grupo in grupos %}
+            <div class="grupo-box">
+
+                <div class="grupo-header">
+                    {{ grupo.categoria|upper }}
+                </div>
+
+                <table class="table tabla-gasto-categoria align-middle">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Fecha y Hora</th>
+                            <th>Descripción Del Gasto</th>
+                            <th>Categoría</th>
+                            <th>Tipo</th>
+                            <th>Proveedor</th>
+                            <th>Responsable</th>
+                            <th>Metodo de pago</th>
+                            <th>Valor</th>
+                            <th>Abonado</th>
+                            <th>Crédito</th>
+                            <th>Egreso de Caja</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for gasto in grupo.gastos %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ gasto.fecha|date:"Y-m-d H:i:s" }}</td>
+                                <td>
+                                    <textarea class="form-control" readonly>{{ gasto.descripcion }}</textarea>
+                                </td>
+                                <td>{{ gasto.categoria.nombre|upper }}</td>
+                                <td>{{ gasto.tipo_gasto|upper }}</td>
+                                <td>
+                                    {% if gasto.proveedor %}
+                                        {{ gasto.proveedor.razon_social|upper }}
+                                    {% else %}
+                                        NULL
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if gasto.responsable %}
+                                        {{ gasto.responsable.username|upper }}
+                                    {% else %}
+                                        NULL
+                                    {% endif %}
+                                </td>
+                                <td>{{ gasto.metodo_pago|upper }}</td>
+                                <td>{{ gasto.valor|floatformat:0 }}</td>
+
+                                <td>
+                                    {% if gasto.tipo_gasto == 'CONTADO' %}
+                                        {{ gasto.valor|floatformat:0 }}
+                                    {% else %}
+                                        0
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if gasto.sacar_caja %}
+                                        NO
+                                    {% else %}
+                                        SI
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if gasto.sacar_caja %}
+                                        SI
+                                    {% else %}
+                                        NO
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <span class="estado-procesado">
+                                        Procesado
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+
+                        <tr class="fw-bold">
+                            <td colspan="8" class="text-end">TOTAL GASTOS</td>
+                            <td>{{ grupo.total|floatformat:0 }}</td>
+                            <td>{{ grupo.contado|floatformat:0 }}</td>
+                            <td>{{ grupo.credito|floatformat:0 }}</td>
+                            <td colspan="2"></td>
+                        </tr>
+
+                        <tr>
+                            <td colspan="13" class="resumen-linea">
+                                Contado: {{ grupo.contado|floatformat:0 }}
+                                |
+                                Crédito: {{ grupo.credito|floatformat:0 }}
+                            </td>
+                        </tr>
+
+                    </tbody>
+                </table>
+
+            </div>
+        {% empty %}
+            <div class="text-center text-muted py-5">
+                No hay gastos por categoría registrados.
+            </div>
+        {% endfor %}
+
+    </div>
+</div>
+
+{% endblock %}

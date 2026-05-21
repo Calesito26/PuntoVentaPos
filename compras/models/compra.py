@@ -7,6 +7,21 @@ from inventario.models import Sede
 
 class Compra(models.Model):
 
+    METODO_PAGO_CHOICES = (
+        ('EFECTIVO', 'Efectivo'),
+        ('TRANSFERENCIA', 'Transferencia'),
+        ('YAPE', 'Yape'),
+        ('PLIN', 'Plin'),
+    )
+
+    metodo_pago = models.CharField(
+        max_length=30,
+        choices=METODO_PAGO_CHOICES,
+        default='EFECTIVO'
+    )
+
+    salio_caja = models.BooleanField(default=True)
+
     ESTADO_CHOICES = (
         ('PENDIENTE', 'Pendiente'),
         ('RECIBIDA', 'Recibida'),

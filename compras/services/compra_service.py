@@ -24,6 +24,8 @@ class CompraService:
             subtotal=Decimal(str(data.get('subtotal', 0))),
             impuesto=Decimal(str(data.get('impuesto', 0))),
             total=Decimal(str(data.get('total', 0))),
+            metodo_pago=data.get('metodo_pago', 'EFECTIVO'),
+            salio_caja=data.get('salio_caja', True),
             responsable=usuario,
             estado=estado,
         )

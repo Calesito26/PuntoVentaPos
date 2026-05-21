@@ -308,9 +308,9 @@
                             <td>{{ compra.fecha_compra|date:"Y-m-d H:i:s" }}</td>
                             <td>{{ compra.proveedor.razon_social|upper }}</td>
                             <td>{{ compra.responsable.username|upper|default:"-" }}</td>
-                            <td>EFECTIVO</td>
+                            <td>{{ compra.metodo_pago|default:"EFECTIVO"|upper }}</td>
                             <td>S/ {{ compra.total|floatformat:2 }}</td>
-                            <td>SI</td>
+                            <td>{% if compra.salio_caja %} SI {% else %} NO {% endif %}</td>
                             <td>
                                 {% if compra.estado == 'RECIBIDA' %}
                                     <span class="estado-pagado">Pagado</span>

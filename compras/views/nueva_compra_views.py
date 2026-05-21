@@ -1,8 +1,9 @@
 import json
+from decimal import Decimal, InvalidOperation
 
-from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import render
+
 from compras.models import Compra
 from compras.models import Proveedor
 from compras.services.compra_service import CompraService
@@ -44,6 +45,61 @@ def nueva_compra(request):
         }
     )
 
+def validar_precio_compra_productos(productos):
+    for item in productos:
+        producto_id = item.get('producto_id')
+
+        if not producto_id:
+            return {
+                'ok': False,
+                'mensaje': 'Hay un producto sin ID.'
+            }
+
+        stock = StockBodega.objects.select_related(
+            'producto'
+        ).filter(
+            producto_id=producto_id,
+            activo=True
+        ).first()
+
+        if not stock:
+            return {
+                'ok': False,
+                'mensaje': 'Uno de los productos no existe en bodega.'
+            }
+
+        producto = stock.producto
+
+        try:
+            precio_compra = Decimal(str(item.get('precio_compra', 0)))
+            precio_venta = Decimal(str(producto.precio_venta))
+        except (InvalidOperation, TypeError):
+            return {
+                'ok': False,
+                'mensaje': f'Precio inválido en el producto {producto.nombre}.'
+            }
+
+        if precio_compra <= 0:
+            return {
+                'ok': False,
+                'mensaje': f'El precio de compra de {producto.nombre} debe ser mayor a 0.'
+            }
+
+        if precio_compra > precio_venta:
+            return {
+                'ok': False,
+                'mensaje': (
+                    f'No se puede registrar la compra. '
+                    f'El producto "{producto.nombre}" tiene precio de compra '
+                    f'S/ {precio_compra} mayor que su precio de venta '
+                    f'S/ {precio_venta}.'
+                )
+            }
+
+    return {
+        'ok': True,
+        'mensaje': 'Precios válidos.'
+    }
 
 @administrador_required
 def guardar_compra(request):
@@ -51,15 +107,34 @@ def guardar_compra(request):
         data = json.loads(request.body)
 
         if not data.get('proveedor'):
-            return JsonResponse({'ok': False, 'mensaje': 'Seleccione un proveedor.'})
+            return JsonResponse({
+                'ok': False,
+                'mensaje': 'Seleccione un proveedor.'
+            })
 
         if not data.get('sede'):
-            return JsonResponse({'ok': False, 'mensaje': 'Seleccione una sede.'})
+            return JsonResponse({
+                'ok': False,
+                'mensaje': 'Seleccione una sede.'
+            })
 
         if not data.get('productos'):
-            return JsonResponse({'ok': False, 'mensaje': 'Agregue productos a la compra.'})
+            return JsonResponse({
+                'ok': False,
+                'mensaje': 'Agregue productos a la compra.'
+            })
 
-        compra = CompraService.registrar_compra(data, request.user)
+        validacion = validar_precio_compra_productos(
+            data.get('productos')
+        )
+
+        if not validacion['ok']:
+            return JsonResponse(validacion)
+
+        compra = CompraService.registrar_compra(
+            data,
+            request.user
+        )
 
         return JsonResponse({
             'ok': True,
@@ -68,7 +143,11 @@ def guardar_compra(request):
             'estado': compra.estado,
         })
 
-    return JsonResponse({'ok': False, 'mensaje': 'Método no permitido.'})
+    return JsonResponse({
+        'ok': False,
+        'mensaje': 'Método no permitido.'
+    })
+
 
 @administrador_required
 def listar_compras_pendientes(request):
@@ -92,6 +171,7 @@ def listar_compras_pendientes(request):
         'ok': True,
         'compras': data
     })
+
 
 @administrador_required
 def cargar_compra_pendiente(request, pk):
