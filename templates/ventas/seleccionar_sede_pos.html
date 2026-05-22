@@ -1,0 +1,34 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Seleccionar sede{% endblock %}
+
+{% block content %}
+
+<div class="page-card" style="max-width: 600px; margin: 60px auto;">
+    <h2 class="fw-bold mb-3">Seleccionar sede de venta</h2>
+
+    <p class="text-muted">
+        Seleccione la sede desde donde realizará las ventas.
+    </p>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <label class="fw-bold">Sede</label>
+        <select name="sede_id" class="form-select mb-4" required>
+            <option value="">SELECCIONAR...</option>
+
+            {% for sede in sedes %}
+                <option value="{{ sede.id }}">
+                    {{ sede.nombre|upper }}
+                </option>
+            {% endfor %}
+        </select>
+
+        <button class="btn btn-primary w-100">
+            Ingresar al POS
+        </button>
+    </form>
+</div>
+
+{% endblock %}

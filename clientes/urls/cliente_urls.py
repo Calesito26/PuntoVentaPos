@@ -11,6 +11,7 @@ from clientes.views.eliminar_cliente_views import eliminar_cliente
 from clientes.views.importar_cliente_views import importar_clientes
 from clientes.views.importar_cliente_views import descargar_ejemplo_clientes
 from clientes.views.exportar_cliente_detalle_views import exportar_detalle_cliente_excel
+from clientes.views.cliente_views import cliente_create_ajax
 
 app_name = 'clientes'
 
@@ -26,4 +27,5 @@ urlpatterns = [
     path('importar/',importar_clientes,name='importar_clientes'),
     path('ejemplo/',descargar_ejemplo_clientes,name='descargar_ejemplo_clientes'),
     path('detalle/<int:cliente_id>/exportar/excel/',exportar_detalle_cliente_excel,name='exportar_detalle_cliente_excel'),
+    path('crear/ajax/', cliente_create_ajax, name='cliente_create_ajax'),
 ]

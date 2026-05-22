@@ -9,6 +9,7 @@ from usuarios.decorators import vendedor_required
 
 from django.http import JsonResponse
 from clientes.services.documento_service import DocumentoService
+from django.http import JsonResponse
 
 @vendedor_required
 def buscar_documento(request):
@@ -110,3 +111,54 @@ def cliente_update(request, pk):
             'titulo': 'Editar cliente'
         }
     )
+
+
+def cliente_create_ajax(request):
+    if request.method != 'POST':
+        return JsonResponse({
+            'ok': False,
+            'error': 'Método no permitido.'
+        })
+
+    tipo_documento = request.POST.get('tipo_documento', '').strip()
+    numero_documento = request.POST.get('numero_documento', '').strip()
+    nombre = request.POST.get('nombre', '').strip()
+    telefono = request.POST.get('telefono', '').strip()
+    email = request.POST.get('email', '').strip()
+    direccion = request.POST.get('direccion', '').strip()
+
+    if not nombre:
+        return JsonResponse({
+            'ok': False,
+            'error': 'Ingrese el nombre del cliente.'
+        })
+
+    if numero_documento:
+        cliente_existente = Cliente.objects.filter(
+            numero_documento=numero_documento
+        ).first()
+
+        if cliente_existente:
+            return JsonResponse({
+                'ok': True,
+                'id': cliente_existente.id,
+                'nombre': cliente_existente.nombre,
+                'mensaje': 'El cliente ya existía y fue seleccionado.'
+            })
+
+    cliente = Cliente.objects.create(
+        tipo_documento=tipo_documento,
+        numero_documento=numero_documento,
+        nombre=nombre,
+        telefono=telefono,
+        email=email,
+        direccion=direccion,
+        activo=True
+    )
+
+    return JsonResponse({
+        'ok': True,
+        'id': cliente.id,
+        'nombre': cliente.nombre,
+        'mensaje': 'Cliente creado correctamente.'
+    })

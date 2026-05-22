@@ -1,0 +1,127 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    Venta terminada
+{% endblock %}
+
+{% block content %}
+
+<style>
+    .resumen-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 32px;
+        padding: 25px;
+    }
+
+    .resumen-title {
+        background: #cfe5ff;
+        color: #084b91;
+        text-align: center;
+        font-size: 36px;
+        padding: 18px;
+        border-radius: 4px;
+        margin-bottom: 20px;
+    }
+
+    .resumen-linea {
+        border-top: 1px solid #ddd;
+        padding: 12px;
+        text-align: center;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    .resumen-label {
+        color: #0097a7;
+        font-weight: bold;
+    }
+
+    .resumen-boton {
+        display: block;
+        width: 100%;
+        padding: 22px;
+        border-radius: 5px;
+        text-align: center;
+        color: white;
+        font-size: 20px;
+        font-weight: bold;
+        text-decoration: none;
+        margin-bottom: 16px;
+    }
+
+    .verde {
+        background: #24a846;
+    }
+
+    .azul {
+        background: #2d57a5;
+    }
+
+    .gris {
+        background: #6c757d;
+    }
+</style>
+
+<div class="resumen-grid">
+
+    <div>
+        <div class="resumen-title">
+            Proceso de facturación terminado
+        </div>
+
+        <div class="resumen-linea">
+            <div class="resumen-label">Total a Pagar</div>
+            S/ {{ venta.total|floatformat:2 }}
+        </div>
+
+        <div class="resumen-linea">
+            <div class="resumen-label">Dinero Recibido</div>
+            S/ {{ venta.monto_recibido|floatformat:2 }}
+        </div>
+
+        <div class="resumen-linea">
+            <div class="resumen-label">Cambio</div>
+            S/ {{ venta.cambio|floatformat:2 }}
+        </div>
+    </div>
+
+    <div>
+        <a
+            href="{% url 'ventas:imprimir_ticket' venta.id %}"
+            target="_blank"
+            class="resumen-boton verde"
+        >
+            Imprimir Ticket<br>
+            No. {{ venta.id|stringformat:"06d" }}
+        </a>
+
+        <a
+            href="{% url 'ventas:imprimir_carta' venta.id %}"
+            target="_blank"
+            class="resumen-boton verde"
+        >
+            Imprimir Tamaño Carta<br>
+            No. {{ venta.id|stringformat:"06d" }}
+        </a>
+
+        <a
+            href="{% url 'ventas:enviar_factura_correo' venta.id %}"
+            class="resumen-boton azul"
+        >
+            Enviar Factura<br>
+            por Correo
+        </a>
+
+        <a
+            href="{% url 'ventas:pos_venta' %}"
+            class="resumen-boton gris"
+        >
+            Realizar<br>
+            Más Ventas
+        </a>
+    </div>
+
+</div>
+
+{% endblock %}
