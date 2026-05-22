@@ -1,7 +1,11 @@
 {% extends 'base/base.html' %}
-{% block title %}Lista de Usuarios{% endblock %}
+
+{% block title %}
+    Lista de Proveedores
+{% endblock %}
 
 {% block content %}
+
 <style>
     .page-title {
         text-align: center;
@@ -9,36 +13,43 @@
         font-weight: bold;
         margin-bottom: 10px;
     }
+
     .top-line {
         display: flex;
         justify-content: space-between;
         align-items: end;
         margin-bottom: 12px;
     }
-    .usuarios-card {
+
+    .proveedores-card {
         background: white;
         border-radius: 8px;
         padding: 12px;
         box-shadow: 0 3px 12px rgba(0,0,0,.06);
     }
+
     .export-box {
         text-align: center;
         font-size: 14px;
     }
+
     .export-box i {
         font-size: 30px;
         margin-left: 8px;
     }
+
     .search-row {
         display: flex;
         justify-content: flex-end;
         gap: 8px;
         margin-bottom: 18px;
     }
-    .tabla-usuarios {
+
+    .tabla-proveedores {
         font-size: 14px;
     }
-    .tabla-usuarios th {
+
+    .tabla-proveedores th {
         background: #e7e7e7;
         text-align: center;
         border: 1px solid #d8d8d8;
@@ -46,12 +57,14 @@
         font-weight: bold;
         vertical-align: middle;
     }
-    .tabla-usuarios td {
+
+    .tabla-proveedores td {
         text-align: center;
         border: 1px solid #e1e1e1;
         padding: 6px;
         vertical-align: middle;
     }
+
     .estado-activo {
         background: #5ba36a;
         color: white;
@@ -60,6 +73,7 @@
         font-weight: bold;
         font-size: 11px;
     }
+
     .estado-inactivo {
         background: #dc3545;
         color: white;
@@ -68,23 +82,40 @@
         font-weight: bold;
         font-size: 11px;
     }
+
     .accion-icon {
         font-size: 18px;
         margin: 0 3px;
         text-decoration: none;
         cursor: pointer;
     }
-    .edit-icon { color: #1d1d1d; }
-    .delete-icon { color: red; }
+
+    .edit-icon {
+        color: #1d1d1d;
+    }
+
+    .delete-icon {
+        color: red;
+    }
 </style>
 
 <div class="container-fluid px-4">
-    <h1 class="page-title">Lista de Usuarios</h1>
+
+    <h1 class="page-title">
+        Lista de Proveedores
+    </h1>
 
     <div class="top-line">
+
         <div>
-            <label>Por página</label>
-            <select class="form-select form-select-sm" style="width:90px;">
+            <label>
+                Por página
+            </label>
+
+            <select
+                class="form-select form-select-sm"
+                style="width:90px;"
+            >
                 <option>10</option>
                 <option>25</option>
                 <option>50</option>
@@ -92,26 +123,35 @@
         </div>
 
         <div class="export-box">
-            <div>Exportar</div>
-            <a href="{% url 'usuarios:exportar_usuarios_excel' %}">
+
+            <div>
+                Exportar
+            </div>
+
+            <a href="{% url 'compras:exportar_proveedores_excel' %}">
                 <i class="bi bi-file-earmark-excel text-success"></i>
             </a>
 
-            <a href="{% url 'usuarios:exportar_usuarios_pdf' %}">
+            <a href="{% url 'compras:exportar_proveedores_pdf' %}">
                 <i class="bi bi-file-earmark-pdf text-danger"></i>
             </a>
+
         </div>
+
     </div>
 
-    <div class="usuarios-card">
+    <div class="proveedores-card">
+
         <form method="get">
+
             <div class="search-row">
+
                 <input
                     type="text"
                     name="buscar"
                     value="{{ buscar }}"
                     class="form-control form-control-sm"
-                    placeholder="Buscar por nombre o documento"
+                    placeholder="Buscar proveedor"
                     style="max-width: 280px;"
                 >
 
@@ -119,118 +159,164 @@
                     <i class="bi bi-search"></i>
                 </button>
 
-                <a href="{% url 'usuarios:usuario_create' %}" class="btn btn-primary btn-sm">
-                    Nuevo Usuario
+                <a
+                    href="{% url 'compras:proveedor_create' %}"
+                    class="btn btn-primary btn-sm"
+                >
+                    Nuevo Proveedor
                 </a>
+
             </div>
+
         </form>
 
         <div class="table-responsive">
-            <table class="table tabla-usuarios align-middle mb-0">
+
+            <table class="table tabla-proveedores align-middle mb-0">
+
                 <thead>
+
                     <tr>
                         <th>Item</th>
-                        <th>Usuario</th>
-                        <th>Número de documento</th>
-                        <th>Nombres y apellidos</th>
-                        <th>E-mail</th>
-                        <th>Dirección</th>
+                        <th>Proveedor</th>
+                        <th>Tipo Doc</th>
+                        <th>Número Documento</th>
                         <th>Teléfono</th>
-                        <th>Cargo</th>
+                        <th>Correo</th>
+                        <th>Dirección</th>
                         <th>Estado</th>
-                        <th>Acciones</th>
+                        <th>Acción</th>
                     </tr>
+
                 </thead>
 
                 <tbody>
-                    {% for usuario in usuarios %}
+
+                    {% for proveedor in proveedores %}
+
                         <tr>
-                            <td>{{ forloop.counter }}</td>
-                            <td>{{ usuario.username }}</td>
+
                             <td>
-                                {{ usuario.perfil.numero_documento|default:"—" }}
+                                {{ forloop.counter }}
                             </td>
+
                             <td class="text-start">
-                                {{ usuario.first_name|upper }} 
+                                {{ proveedor.razon_social|upper }}
                             </td>
-                            <td class="text-start">{{ usuario.email }}</td>
+
+                            <td>
+                                {{ proveedor.tipo_documento }}
+                            </td>
+
+                            <td>
+                                {{ proveedor.numero_documento }}
+                            </td>
+
+                            <td>
+                                {{ proveedor.telefono|default:"NULL" }}
+                            </td>
+
+                            <td>
+                                {{ proveedor.email|default:"NULL" }}
+                            </td>
+
                             <td class="text-start">
-                                {{ usuario.perfil.direccion|default:"—" }}
+                                {{ proveedor.direccion|default:"NULL" }}
                             </td>
-                            <td>{{ usuario.perfil.telefono|default:"—" }}</td>
+
                             <td>
-                                {% if usuario.is_superuser %}
-                                    ADMINISTRADOR
+
+                                {% if proveedor.activo %}
+
+                                    <span class="estado-activo">
+                                        Activo
+                                    </span>
+
                                 {% else %}
-                                    {% for grupo in usuario.groups.all %}
-                                        {{ grupo.name|upper }}
-                                    {% empty %}
-                                        SIN ROL
-                                    {% endfor %}
+
+                                    <span class="estado-inactivo">
+                                        Inactivo
+                                    </span>
+
                                 {% endif %}
+
                             </td>
+
                             <td>
-                                {% if usuario.is_active %}
-                                    <span class="estado-activo">Activo</span>
-                                {% else %}
-                                    <span class="estado-inactivo">Inactivo</span>
-                                {% endif %}
-                            </td>
-                            <td>
+
                                 <a
-                                    href="{% url 'usuarios:usuario_update' usuario.id %}"
+                                    href="{% url 'compras:proveedor_update' proveedor.id %}"
                                     class="accion-icon edit-icon"
                                     title="Editar"
                                 >
-                                    <i class="bi bi-pencil-square"></i>
+                                    <i class="bi bi-pencil"></i>
                                 </a>
 
                                 <a
                                     href="javascript:void(0)"
-                                    onclick="eliminarUsuario({{ usuario.id }})"
+                                    onclick="eliminarProveedor({{ proveedor.id }})"
                                     class="accion-icon delete-icon"
                                     title="Eliminar"
                                 >
                                     <i class="bi bi-trash"></i>
                                 </a>
+
                             </td>
+
                         </tr>
+
                     {% empty %}
+
                         <tr>
-                            <td colspan="10" class="text-center text-muted py-5">
-                                No hay usuarios registrados.
+                            <td
+                                colspan="9"
+                                class="text-center text-muted py-5"
+                            >
+                                No hay proveedores registrados.
                             </td>
                         </tr>
+
                     {% endfor %}
+
                 </tbody>
+
             </table>
+
         </div>
 
         <div class="mt-3">
             Paginas: 1
         </div>
+
     </div>
+
 </div>
 
 <script>
-function eliminarUsuario(usuarioId) {
-    if (!confirm('¿Eliminar usuario?')) {
+function eliminarProveedor(proveedorId) {
+
+    if (!confirm(
+        '¿Eliminar proveedor?'
+    )) {
         return;
     }
 
-    fetch(`/usuarios/eliminar/${usuarioId}/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}'
+    fetch(
+        `/compras/proveedores/eliminar/${proveedorId}/`,
+        {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
         }
-    })
+    )
     .then(response => response.json())
     .then(data => {
+
         if (data.ok) {
             location.reload();
-        } else {
-            alert(data.mensaje || 'No se pudo eliminar el usuario.');
         }
+
     });
 }
 </script>

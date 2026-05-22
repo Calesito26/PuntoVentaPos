@@ -1,13 +1,15 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.http import HttpResponse
+
+import openpyxl
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
 
 from gastos.models.categoria_gasto import CategoriaGasto
 from gastos.forms.categoria_gasto_form import CategoriaGastoForm
-import openpyxl
-
-from django.http import HttpResponse
-
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+from inventario.models import ConfiguracionEmpresa
+from core.services.pdf_empresa_service import agregar_cabecera_empresa
 
 
 def categoria_gasto_list(request):
@@ -64,6 +66,7 @@ def categoria_gasto_delete(request, pk):
 
     return redirect('gastos:categoria_gasto_list')
 
+
 def categoria_gasto_excel(request):
     categorias = CategoriaGasto.objects.all().order_by('nombre')
 
@@ -99,34 +102,56 @@ def categoria_gasto_pdf(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename=categorias_gastos.pdf'
 
-    pdf = canvas.Canvas(response, pagesize=letter)
-    width, height = letter
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=A4,
+        rightMargin=40,
+        leftMargin=40,
+        topMargin=40,
+        bottomMargin=30
+    )
 
-    y = height - 50
+    elementos = []
 
-    pdf.setFont('Helvetica-Bold', 16)
-    pdf.drawString(40, y, 'Categorias de Gastos')
-    y -= 35
+    # ✅ Cabecera dinámica con logo y datos de empresa
+    empresa = ConfiguracionEmpresa.obtener_configuracion()
 
-    pdf.setFont('Helvetica-Bold', 9)
-    pdf.drawString(40, y, 'Item')
-    pdf.drawString(90, y, 'Nombre')
-    pdf.drawString(320, y, 'Estado')
-    y -= 18
+    agregar_cabecera_empresa(
+        elementos,
+        empresa,
+        'Categorías de Gastos'
+    )
 
-    pdf.setFont('Helvetica', 9)
+    data = [[
+        'Item',
+        'Nombre',
+        'Estado'
+    ]]
 
     for index, categoria in enumerate(categorias, start=1):
-        if y < 50:
-            pdf.showPage()
-            y = height - 50
-            pdf.setFont('Helvetica', 9)
+        data.append([
+            str(index),
+            categoria.nombre,
+            'ACTIVO' if categoria.activo else 'INACTIVO'
+        ])
 
-        pdf.drawString(40, y, str(index))
-        pdf.drawString(90, y, categoria.nombre)
-        pdf.drawString(320, y, 'ACTIVO' if categoria.activo else 'INACTIVO')
+    tabla = Table(
+        data,
+        colWidths=[50, 300, 100]
+    )
 
-        y -= 18
+    tabla.setStyle(TableStyle([
+        ('FONTNAME',      (0, 0), (-1, 0),  'Helvetica-Bold'),
+        ('FONTSIZE',      (0, 0), (-1, -1), 10),
+        ('BOTTOMPADDING', (0, 0), (-1, 0),  12),
+        ('TOPPADDING',    (0, 1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+        ('ALIGN',         (0, 0), (-1, -1), 'LEFT'),
+        ('TEXTCOLOR',     (0, 0), (-1, 0),  colors.black),
+    ]))
 
-    pdf.save()
+    elementos.append(tabla)
+
+    doc.build(elementos)
+
     return response

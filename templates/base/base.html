@@ -25,21 +25,47 @@
             bottom: 0;
             left: 0;
             z-index: 1000;
+            overflow-y: auto;
         }
+
+        /* ✅ BRAND: logo + nombre empresa + usuario, compacto y centrado */
         .brand {
-            height: 74px;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            flex-direction: column;
-            font-weight: bold;
+            padding: 10px 6px 8px;
             border-bottom: 1px solid rgba(255,255,255,.2);
+            gap: 5px;
         }
-        .brand i {
-            font-size: 26px;
+        .brand-logo {
+            width: 46px;
+            height: 46px;
+            object-fit: contain;
+            border-radius: 10px;
+            flex-shrink: 0;
         }
+        .brand-logo-icon {
+            font-size: 34px;
+            color: white;
+        }
+        .brand-name {
+            color: white;
+            font-weight: 700;
+            font-size: 12px;
+            word-break: break-word;
+            text-align: center;
+            line-height: 1.2;
+        }
+        .brand-user {
+            color: #dbe7ff;
+            font-size: 10px;
+            text-align: center;
+            line-height: 1.2;
+        }
+
         .menu-item {
-            height: 76px;
+            height: 70px;
             color: white;
             text-decoration: none;
             display: flex;
@@ -47,11 +73,13 @@
             justify-content: center;
             flex-direction: column;
             border-bottom: 1px solid rgba(255,255,255,.15);
-            font-size: 13px;
+            font-size: 12px;
+            text-align: center;
+            padding: 0 4px;
         }
         .menu-item i {
-            font-size: 28px;
-            margin-bottom: 4px;
+            font-size: 26px;
+            margin-bottom: 3px;
         }
         .menu-item:hover,
         .menu-item.active {
@@ -123,11 +151,9 @@
             background: rgba(255, 255, 255, 0.12);
             color: white;
         }
-
         .menu-dropdown:hover .submenu-Compras {
             display: flex;
         }
-
         .submenu-Compras {
             position: fixed;
             left: 92px;
@@ -140,7 +166,6 @@
             padding-top: 12px;
             z-index: 3000;
         }
-
         .submenu-Gastos {
             position: fixed;
             top: 58px;
@@ -153,11 +178,9 @@
             padding-top: 12px;
             display: none;
         }
-
         .menu-dropdown:hover .submenu-Gastos {
             display: block;
         }
-
         .submenu-Gastos .submenu-item {
             display: block;
             color: white;
@@ -165,27 +188,58 @@
             text-decoration: none;
             font-size: 15px;
         }
-
         .submenu-Gastos .submenu-item:hover {
             background: rgba(255,255,255,.12);
         }
-
-
+        .submenu-Config {
+            position: fixed;
+            top: 58px;
+            left: 92px;
+            width: 240px;
+            min-height: 100vh;
+            background: #426fb4;
+            flex-direction: column;
+            z-index: 3000;
+            padding-top: 12px;
+            display: none;
+        }
+        .menu-dropdown:hover .submenu-Config {
+            display: flex;
+        }
+        .submenu-Config .submenu-item {
+            display: block;
+            color: white;
+            padding: 12px 18px;
+            text-decoration: none;
+            font-size: 15px;
+        }
     </style>
     {% block css %}{% endblock %}
 </head>
 <body>
 <div class="app-layout">
     <aside class="sidebar">
+
+        <!-- ✅ BRAND: logo encima, nombre empresa y usuario debajo, compacto -->
         <div class="brand">
-            <i class="bi bi-shop"></i>
-            <span>POS</span>
-            {% if request.user.is_authenticated %}
-                <small style="font-size: 10px; margin-top: 4px;">
-                    {{ request.user.username|upper }}
-                </small>
+            {% if empresa_config.logo_sidebar %}
+                <img
+                    src="{{ empresa_config.logo_sidebar.url }}"
+                    alt="Logo"
+                    class="brand-logo"
+                >
+            {% else %}
+                <i class="bi bi-shop brand-logo-icon"></i>
             {% endif %}
+            <span class="brand-name">
+                {{ empresa_config.nombre_empresa|default:"POS" }}
+            </span>
+            <span class="brand-user">
+                {{ request.user.username|upper }}
+            </span>
         </div>
+        <!-- FIN BRAND -->
+
         <a href="{% url 'home' %}" class="menu-item">
             <i class="bi bi-bar-chart-line"></i>
             Inicio
@@ -219,14 +273,12 @@
                 Compras
             </div>
             <div class="submenu-Compras">
-
                 <a href="{% url 'compras:nueva_compra' %}" class="submenu-item">Nueva Compra</a>
                 <a href="{% url 'compras:historial_compra_list' %}" class="submenu-item">Historial Compra</a>
                 <a href="{% url 'compras:detalle_compra_list' %}" class="submenu-item">Detalle de compras</a>
-                <a href="{% url 'compras:compras_por_categoria_list' %}" class="submenu-item">Compras por categorias </a>
-                <a href="{% url 'compras:devolucion_compra_list' %}" class="submenu-item">Devolucion, notas de ajuste </a>
+                <a href="{% url 'compras:compras_por_categoria_list' %}" class="submenu-item">Compras por categorias</a>
+                <a href="{% url 'compras:devolucion_compra_list' %}" class="submenu-item">Devolucion, notas de ajuste</a>
             </div>
-
         </div>
 
         <div class="menu-dropdown">
@@ -240,29 +292,34 @@
                 <a href="{% url 'gastos:gasto_categoria_list' %}" class="submenu-item">Gastos por categorias</a>
             </div>
         </div>
-        
 
         <a href="{% url 'clientes:cliente_list' %}" class="menu-item">
             <i class="bi bi-people"></i>
             Clientes
         </a>
-        {% if request.user.is_superuser or request.user|has_group:"Administrador" %}
-            <a href="{% url 'usuarios:usuario_list' %}" class="menu-item">
-                <i class="bi bi-person-gear"></i>
-                Usuarios
-            </a>
-        {% endif %}
-        
-        <a href="#" class="menu-item">
-            <i class="bi bi-gear"></i>
-            Config
-        </a>
+
+        <div class="menu-dropdown">
+            <div class="menu-item">
+                <i class="bi bi-gear"></i>
+                Configuracion
+            </div>
+            <div class="submenu-Config">
+                <a href="{% url 'inventario:configuracion_empresa' %}" class="submenu-item">Sucursal</a>
+                <a href="{% url 'compras:proveedor_list' %}" class="submenu-item">Proveedores</a>
+                {% if request.user.is_superuser or request.user|has_group:"Administrador" %}
+                    <a href="{% url 'usuarios:usuario_list' %}" class="submenu-item">Usuarios</a>
+                {% endif %}
+            </div>
+        </div>
+
     </aside>
     <main class="main-content">
         <div class="topbar">
             <i class="bi bi-bell"></i>
             <div class="dropdown">
-                <a href="#" class="text-white text-decoration-none" data-bs-toggle="dropdown"><i class="bi bi-person-circle"></i></a>
+                <a href="#" class="text-white text-decoration-none" data-bs-toggle="dropdown">
+                    <i class="bi bi-person-circle"></i>
+                </a>
                 <ul class="dropdown-menu dropdown-menu-end">
                     {% if request.user.is_authenticated %}
                         <li>

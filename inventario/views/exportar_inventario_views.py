@@ -3,10 +3,12 @@ import openpyxl
 from django.db.models import F
 from django.http import HttpResponse
 
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 
-from inventario.models import StockBodega
+from inventario.models import ConfiguracionEmpresa, StockBodega
+from core.services.pdf_empresa_service import agregar_cabecera_empresa
 from usuarios.decorators import vendedor_required
 
 
@@ -81,42 +83,68 @@ def exportar_baja_existencia_pdf(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename=baja_existencia.pdf'
 
-    pdf = canvas.Canvas(response, pagesize=letter)
-    width, height = letter
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=A4,
+        rightMargin=40,
+        leftMargin=40,
+        topMargin=40,
+        bottomMargin=30
+    )
 
-    y = height - 40
+    elementos = []
 
-    pdf.setFont('Helvetica-Bold', 14)
-    pdf.drawString(40, y, 'Productos de baja existencia')
-    y -= 30
+    empresa = ConfiguracionEmpresa.obtener_configuracion()
 
-    pdf.setFont('Helvetica-Bold', 8)
-    pdf.drawString(40, y, 'Item')
-    pdf.drawString(70, y, 'Bodega')
-    pdf.drawString(150, y, 'Código')
-    pdf.drawString(230, y, 'Nombre')
-    pdf.drawString(410, y, 'Stock')
-    pdf.drawString(470, y, 'Mínimo')
-    y -= 15
+    agregar_cabecera_empresa(
+        elementos,
+        empresa,
+        'Productos de Baja Existencia'
+    )
 
-    pdf.setFont('Helvetica', 8)
+    data = [[
+        'Item',
+        'Bodega',
+        'Código',
+        'Nombre',
+        'Stock',
+        'Mínimo',
+        'Compra',
+        'Venta',
+        'Estado',
+    ]]
 
     for index, stock in enumerate(stocks, start=1):
-        if y < 40:
-            pdf.showPage()
-            y = height - 40
-            pdf.setFont('Helvetica', 8)
+        data.append([
+            str(index),
+            stock.sede.nombre,
+            stock.producto.codigo,
+            stock.producto.nombre,
+            str(stock.stock),
+            str(stock.stock_minimo),
+            str(stock.producto.precio_compra),
+            str(stock.producto.precio_venta),
+            'Activo' if stock.activo else 'Inactivo',
+        ])
 
-        pdf.drawString(40, y, str(index))
-        pdf.drawString(70, y, stock.sede.nombre[:12])
-        pdf.drawString(150, y, stock.producto.codigo[:12])
-        pdf.drawString(230, y, stock.producto.nombre[:28])
-        pdf.drawString(410, y, str(stock.stock))
-        pdf.drawString(470, y, str(stock.stock_minimo))
+    tabla = Table(
+        data,
+        colWidths=[30, 70, 60, 130, 45, 45, 50, 50, 45]
+    )
 
-        y -= 15
+    tabla.setStyle(TableStyle([
+        ('FONTNAME',      (0, 0), (-1, 0),  'Helvetica-Bold'),
+        ('FONTSIZE',      (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0),  10),
+        ('TOPPADDING',    (0, 1), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ('ALIGN',         (0, 0), (-1, -1), 'LEFT'),
+        ('TEXTCOLOR',     (0, 0), (-1, 0),  colors.black),
+    ]))
 
-    pdf.save()
+    elementos.append(tabla)
+
+    doc.build(elementos)
 
     return response
 
@@ -184,25 +212,35 @@ def exportar_estado_inventario_pdf(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename=estado_inventario.pdf'
 
-    pdf = canvas.Canvas(response, pagesize=letter)
-    width, height = letter
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=A4,
+        rightMargin=40,
+        leftMargin=40,
+        topMargin=40,
+        bottomMargin=30
+    )
 
-    y = height - 40
+    elementos = []
 
-    pdf.setFont('Helvetica-Bold', 14)
-    pdf.drawString(40, y, 'Estado del inventario')
-    y -= 30
+    empresa = ConfiguracionEmpresa.obtener_configuracion()
 
-    pdf.setFont('Helvetica-Bold', 8)
-    pdf.drawString(40, y, 'Item')
-    pdf.drawString(70, y, 'Código')
-    pdf.drawString(150, y, 'Nombre')
-    pdf.drawString(330, y, 'Stock')
-    pdf.drawString(390, y, 'Compra')
-    pdf.drawString(460, y, 'Venta')
-    y -= 15
+    agregar_cabecera_empresa(
+        elementos,
+        empresa,
+        'Estado del Inventario'
+    )
 
-    pdf.setFont('Helvetica', 8)
+    data = [[
+        'Item',
+        'Código',
+        'Nombre',
+        'Stock',
+        'Compra',
+        'T. Costo',
+        'Venta',
+        'T. Venta',
+    ]]
 
     costo_total = 0
     venta_total = 0
@@ -214,26 +252,39 @@ def exportar_estado_inventario_pdf(request):
         costo_total += total_costo
         venta_total += total_venta
 
-        if y < 60:
-            pdf.showPage()
-            y = height - 40
-            pdf.setFont('Helvetica', 8)
+        data.append([
+            str(index),
+            stock.producto.codigo,
+            stock.producto.nombre,
+            str(stock.stock),
+            str(stock.producto.precio_compra),
+            str(round(total_costo, 2)),
+            str(stock.producto.precio_venta),
+            str(round(total_venta, 2)),
+        ])
 
-        pdf.drawString(40, y, str(index))
-        pdf.drawString(70, y, stock.producto.codigo[:12])
-        pdf.drawString(150, y, stock.producto.nombre[:28])
-        pdf.drawString(330, y, str(stock.stock))
-        pdf.drawString(390, y, str(stock.producto.precio_compra))
-        pdf.drawString(460, y, str(stock.producto.precio_venta))
+    data.append(['', '', '', '', '', '', '', ''])
+    data.append(['', '', '', '', 'COSTO TOTAL', str(round(costo_total, 2)), '', ''])
+    data.append(['', '', '', '', 'VENTA TOTAL', str(round(venta_total, 2)), '', ''])
 
-        y -= 15
+    tabla = Table(
+        data,
+        colWidths=[30, 65, 140, 45, 55, 60, 55, 60]
+    )
 
-    y -= 20
-    pdf.setFont('Helvetica-Bold', 9)
-    pdf.drawString(300, y, f'COSTO TOTAL INVENTARIO: {costo_total}')
-    y -= 15
-    pdf.drawString(300, y, f'VENTA TOTAL INVENTARIO: {venta_total}')
+    tabla.setStyle(TableStyle([
+        ('FONTNAME',      (0, 0),  (-1, 0),  'Helvetica-Bold'),
+        ('FONTNAME',      (0, -2), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE',      (0, 0),  (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0),  (-1, 0),  10),
+        ('TOPPADDING',    (0, 1),  (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 1),  (-1, -1), 6),
+        ('ALIGN',         (0, 0),  (-1, -1), 'LEFT'),
+        ('TEXTCOLOR',     (0, 0),  (-1, 0),  colors.black),
+    ]))
 
-    pdf.save()
+    elementos.append(tabla)
+
+    doc.build(elementos)
 
     return response

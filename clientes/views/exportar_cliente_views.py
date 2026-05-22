@@ -2,10 +2,13 @@ import openpyxl
 
 from django.http import HttpResponse
 
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
 
 from clientes.models import Cliente
+from inventario.models import ConfiguracionEmpresa
+from core.services.pdf_empresa_service import agregar_cabecera_empresa
 from usuarios.decorators import administrador_required
 
 
@@ -53,45 +56,67 @@ def exportar_clientes_excel(request):
 
 @administrador_required
 def exportar_clientes_pdf(request):
-    clientes = Cliente.objects.all().order_by('nombre')
-
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename=clientes.pdf'
 
-    pdf = canvas.Canvas(response, pagesize=letter)
-    width, height = letter
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=A4,
+        rightMargin=40,
+        leftMargin=40,
+        topMargin=40,
+        bottomMargin=30
+    )
 
-    y = height - 45
+    elementos = []
 
-    pdf.setFont('Helvetica-Bold', 16)
-    pdf.drawString(40, y, 'Lista de Clientes')
-    y -= 30
+    # ✅ Cabecera dinámica con logo y datos de empresa
+    empresa = ConfiguracionEmpresa.obtener_configuracion()
 
-    pdf.setFont('Helvetica-Bold', 8)
-    pdf.drawString(40, y, 'Item')
-    pdf.drawString(75, y, 'Nombre')
-    pdf.drawString(230, y, 'Doc')
-    pdf.drawString(320, y, 'Telefono')
-    pdf.drawString(400, y, 'Correo')
-    y -= 16
+    agregar_cabecera_empresa(
+        elementos,
+        empresa,
+        'Lista de Clientes'
+    )
 
-    pdf.setFont('Helvetica', 8)
+    data = [[
+        'Item',
+        'Nombre',
+        'Documento',
+        'Teléfono',
+        'Correo',
+    ]]
+
+    clientes = Cliente.objects.all().order_by('nombre')
 
     for index, cliente in enumerate(clientes, start=1):
-        if y < 50:
-            pdf.showPage()
-            y = height - 45
-            pdf.setFont('Helvetica', 8)
-
         correo = getattr(cliente, 'correo', '') or getattr(cliente, 'email', '')
 
-        pdf.drawString(40, y, str(index))
-        pdf.drawString(75, y, str(cliente.nombre)[:24])
-        pdf.drawString(230, y, str(cliente.numero_documento)[:14])
-        pdf.drawString(320, y, str(cliente.telefono or '')[:12])
-        pdf.drawString(400, y, str(correo)[:24])
+        data.append([
+            str(index),
+            str(cliente.nombre),
+            str(cliente.numero_documento),
+            str(cliente.telefono or '-'),
+            str(correo or '-'),
+        ])
 
-        y -= 16
+    tabla = Table(
+        data,
+        colWidths=[35, 160, 100, 90, 130]
+    )
 
-    pdf.save()
+    tabla.setStyle(TableStyle([
+        ('FONTNAME',      (0, 0), (-1, 0),  'Helvetica-Bold'),
+        ('FONTSIZE',      (0, 0), (-1, -1), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, 0),  12),
+        ('TOPPADDING',    (0, 1), (-1, -1), 7),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 7),
+        ('ALIGN',         (0, 0), (-1, -1), 'LEFT'),
+        ('TEXTCOLOR',     (0, 0), (-1, 0),  colors.black),
+    ]))
+
+    elementos.append(tabla)
+
+    doc.build(elementos)
+
     return response

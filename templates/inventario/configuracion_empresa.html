@@ -1,0 +1,349 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+Configuración Empresa
+{% endblock %}
+
+{% block css %}
+<style>
+    .config-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 32px;
+        box-shadow: 0 4px 16px rgba(0,0,0,.08);
+    }
+
+    .section-title {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 28px;
+        color: #1a1a2e;
+    }
+
+    .section-subtitle {
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: #23539b;
+        margin-top: 32px;
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #e8eef8;
+    }
+
+    .form-label {
+        font-weight: 600;
+        font-size: 13px;
+        color: #444;
+        margin-bottom: 5px;
+    }
+
+    .form-control,
+    .form-select {
+        border-radius: 8px;
+        border: 1.5px solid #dde3f0;
+        font-size: 14px;
+        padding: 9px 13px;
+        transition: border-color .2s;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #23539b;
+        box-shadow: 0 0 0 3px rgba(35,83,155,.1);
+    }
+
+    /* ── Caja de upload ── */
+    .logo-upload-box {
+        border: 2px dashed #ccd6ec;
+        border-radius: 12px;
+        padding: 20px 16px;
+        text-align: center;
+        background: #f7f9fd;
+        transition: border-color .2s, background .2s;
+        cursor: pointer;
+        position: relative;
+    }
+
+    .logo-upload-box:hover {
+        border-color: #23539b;
+        background: #eef3fb;
+    }
+
+    .logo-preview-img {
+        width: 100px;
+        height: 100px;
+        object-fit: contain;
+        border-radius: 10px;
+        background: #fff;
+        border: 1px solid #e0e7f3;
+        margin: 0 auto 10px;
+        display: block;
+    }
+
+    .logo-placeholder {
+        width: 100px;
+        height: 100px;
+        border-radius: 10px;
+        background: #e8eef8;
+        margin: 0 auto 10px;
+    }
+
+    .logo-upload-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: #23539b;
+        margin-bottom: 2px;
+    }
+
+    .logo-upload-hint {
+        font-size: 11px;
+        color: #aaa;
+    }
+
+    .logo-file-name {
+        font-size: 11px;
+        color: #666;
+        margin-top: 6px;
+        font-style: italic;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Ocultar widget nativo de Django */
+    .logo-upload-box input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+    }
+
+    .logo-upload-box a,
+    .logo-upload-box p,
+    .logo-upload-box input[type="checkbox"],
+    .logo-upload-box label[for],
+    .logo-upload-box br {
+        display: none !important;
+    }
+
+    .logo-card-label {
+        font-weight: 700;
+        font-size: 13px;
+        color: #333;
+        margin-bottom: 8px;
+        text-align: center;
+    }
+
+    .logos-col {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .btn-guardar {
+        background: #23539b;
+        border: none;
+        border-radius: 9px;
+        padding: 11px 32px;
+        font-size: 14px;
+        font-weight: 600;
+        color: white;
+        transition: background .2s, transform .1s;
+        cursor: pointer;
+    }
+
+    .btn-guardar:hover {
+        background: #1d4785;
+        transform: translateY(-1px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid px-2">
+    <div class="config-card">
+
+        <h1 class="section-title">Configuración de Empresa</h1>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="row g-4">
+
+                <!-- ── Columna logos ── -->
+                <div class="col-md-3">
+                    <div class="logos-col">
+
+                        <!-- Logo Empresa -->
+                        <div>
+                            <div class="logo-card-label">Logo Empresa</div>
+                            <div class="logo-upload-box" id="boxLogoEmpresa">
+                                {% if empresa.logo %}
+                                    <img
+                                        src="{{ empresa.logo.url }}"
+                                        class="logo-preview-img"
+                                        id="previewLogoEmpresa"
+                                    >
+                                {% else %}
+                                    <div class="logo-placeholder" id="placeholderLogoEmpresa"></div>
+                                    <img
+                                        src=""
+                                        class="logo-preview-img"
+                                        id="previewLogoEmpresa"
+                                        style="display:none;"
+                                    >
+                                {% endif %}
+                                <div class="logo-upload-label">Subir imagen</div>
+                                <div class="logo-upload-hint">PNG, JPG · máx 2MB</div>
+                                <div class="logo-file-name" id="nombreLogoEmpresa"></div>
+                                {{ form.logo }}
+                            </div>
+                        </div>
+
+                        <!-- Logo Sidebar -->
+                        <div>
+                            <div class="logo-card-label">Logo Sidebar</div>
+                            <div class="logo-upload-box" id="boxLogoSidebar">
+                                {% if empresa.logo_sidebar %}
+                                    <img
+                                        src="{{ empresa.logo_sidebar.url }}"
+                                        class="logo-preview-img"
+                                        id="previewLogoSidebar"
+                                    >
+                                {% else %}
+                                    <div class="logo-placeholder" id="placeholderLogoSidebar"></div>
+                                    <img
+                                        src=""
+                                        class="logo-preview-img"
+                                        id="previewLogoSidebar"
+                                        style="display:none;"
+                                    >
+                                {% endif %}
+                                <div class="logo-upload-label">Subir imagen</div>
+                                <div class="logo-upload-hint">PNG, JPG · máx 2MB</div>
+                                <div class="logo-file-name" id="nombreLogoSidebar"></div>
+                                {{ form.logo_sidebar }}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- ── Columna datos ── -->
+                <div class="col-md-9">
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label">Nombre Empresa</label>
+                            {{ form.nombre_empresa }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Razón Social</label>
+                            {{ form.razon_social }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">RUC</label>
+                            {{ form.ruc }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Teléfono</label>
+                            {{ form.telefono }}
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label">Correo</label>
+                            {{ form.email }}
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">Dirección</label>
+                            {{ form.direccion }}
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label">Página Web</label>
+                            {{ form.pagina_web }}
+                        </div>
+
+                    </div>
+
+                    <div class="section-subtitle">Configuración Ticket</div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Pie del Ticket</label>
+                        {{ form.pie_ticket }}
+                    </div>
+
+                    <div class="section-subtitle">Configuración Correo</div>
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label">Correo empresa</label>
+                            {{ form.smtp_email }}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label">Contraseña App Gmail</label>
+                            {{ form.smtp_password }}
+                        </div>
+
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn-guardar">
+                            Guardar Configuración
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+<script>
+    function setupLogoPreview(boxId, previewId, placeholderId, nombreId) {
+        const box = document.getElementById(boxId);
+        if (!box) return;
+
+        const input = box.querySelector('input[type="file"]');
+        if (!input) return;
+
+        input.addEventListener('change', function () {
+            const file = this.files[0];
+            if (!file) return;
+
+            const preview = document.getElementById(previewId);
+            const placeholder = document.getElementById(placeholderId);
+            const nombre = document.getElementById(nombreId);
+
+            const reader = new FileReader();
+            reader.onload = e => {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+
+            if (nombre) nombre.textContent = file.name;
+        });
+    }
+
+    setupLogoPreview('boxLogoEmpresa',  'previewLogoEmpresa',  'placeholderLogoEmpresa',  'nombreLogoEmpresa');
+    setupLogoPreview('boxLogoSidebar',  'previewLogoSidebar',  'placeholderLogoSidebar',  'nombreLogoSidebar');
+</script>
+
+{% endblock %}

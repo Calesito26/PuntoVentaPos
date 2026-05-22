@@ -167,35 +167,13 @@
                     type="email"
                     class="form-control"
                     name="correo_destino"
-                    value="{{ venta.cliente.email|default:'' }}"
+                    value="{{ correo_cliente }}"
                     placeholder="cliente@gmail.com"
                     required
                 >
 
                 <div class="correo-help">
                     Puedes cambiar el correo si el cliente quiere recibirlo en otro email.
-                </div>
-
-            </div>
-
-            <div class="preview-box">
-
-                <div class="preview-title">
-                    Vista previa del envío
-                </div>
-
-                <div>
-                    Se enviará:
-                </div>
-
-                <ul>
-                    <li>Factura PDF tamaño carta</li>
-                    <li>Ticket de venta</li>
-                    <li>Resumen de compra</li>
-                </ul>
-
-                <div class="badge-pendiente">
-                    🚧 Mejora futura: correo automático desde configuración de empresa
                 </div>
 
             </div>

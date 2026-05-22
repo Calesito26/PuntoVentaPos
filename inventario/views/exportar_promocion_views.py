@@ -2,10 +2,12 @@ import openpyxl
 
 from django.http import HttpResponse
 
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 
-from inventario.models import Promocion
+from inventario.models import ConfiguracionEmpresa, Promocion
+from core.services.pdf_empresa_service import agregar_cabecera_empresa
 from usuarios.decorators import administrador_required
 
 
@@ -61,42 +63,63 @@ def exportar_promociones_pdf(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename=promociones.pdf'
 
-    pdf = canvas.Canvas(response, pagesize=letter)
-    width, height = letter
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=A4,
+        rightMargin=40,
+        leftMargin=40,
+        topMargin=40,
+        bottomMargin=30
+    )
 
-    y = height - 40
+    elementos = []
 
-    pdf.setFont('Helvetica-Bold', 14)
-    pdf.drawString(40, y, 'Historial de promociones')
-    y -= 30
+    empresa = ConfiguracionEmpresa.obtener_configuracion()
 
-    pdf.setFont('Helvetica-Bold', 8)
-    pdf.drawString(40, y, 'Item')
-    pdf.drawString(70, y, 'Nombre')
-    pdf.drawString(220, y, 'Inicio')
-    pdf.drawString(320, y, 'Fin')
-    pdf.drawString(420, y, 'Desc.')
-    pdf.drawString(470, y, 'Estado')
-    y -= 15
+    agregar_cabecera_empresa(
+        elementos,
+        empresa,
+        'Historial de Promociones'
+    )
 
-    pdf.setFont('Helvetica', 8)
+    data = [[
+        'Item',
+        'Nombre',
+        'Inicio',
+        'Fin',
+        'Desc.',
+        'Responsable',
+        'Estado',
+    ]]
 
     for index, promocion in enumerate(promociones, start=1):
+        data.append([
+            str(index),
+            promocion.nombre,
+            promocion.fecha_inicio.strftime('%d/%m/%Y'),
+            promocion.fecha_fin.strftime('%d/%m/%Y'),
+            f'{promocion.porcentaje_descuento}%',
+            promocion.responsable.username if promocion.responsable else '-',
+            'Activo' if promocion.activo else 'Inactivo',
+        ])
 
-        if y < 50:
-            pdf.showPage()
-            y = height - 40
-            pdf.setFont('Helvetica', 8)
+    tabla = Table(
+        data,
+        colWidths=[30, 150, 70, 70, 40, 90, 55]
+    )
 
-        pdf.drawString(40, y, str(index))
-        pdf.drawString(70, y, promocion.nombre[:22])
-        pdf.drawString(220, y, promocion.fecha_inicio.strftime('%d/%m/%Y'))
-        pdf.drawString(320, y, promocion.fecha_fin.strftime('%d/%m/%Y'))
-        pdf.drawString(420, y, f'{promocion.porcentaje_descuento}%')
-        pdf.drawString(470, y, 'Activo' if promocion.activo else 'Inactivo')
+    tabla.setStyle(TableStyle([
+        ('FONTNAME',      (0, 0), (-1, 0),  'Helvetica-Bold'),
+        ('FONTSIZE',      (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0),  10),
+        ('TOPPADDING',    (0, 1), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ('ALIGN',         (0, 0), (-1, -1), 'LEFT'),
+        ('TEXTCOLOR',     (0, 0), (-1, 0),  colors.black),
+    ]))
 
-        y -= 15
+    elementos.append(tabla)
 
-    pdf.save()
+    doc.build(elementos)
 
     return response

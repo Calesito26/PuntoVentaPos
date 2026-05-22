@@ -21,7 +21,7 @@
 
         .top {
             display: grid;
-            grid-template-columns: 1fr 160px;
+            grid-template-columns: 1fr 170px;
             gap: 20px;
             align-items: start;
         }
@@ -29,6 +29,22 @@
         .empresa {
             text-align: center;
             font-weight: bold;
+        }
+
+        .empresa-logo {
+            max-height: 75px;
+            max-width: 210px;
+            object-fit: contain;
+            margin-bottom: 8px;
+        }
+
+        .empresa h2 {
+            margin: 5px 0;
+            font-size: 22px;
+        }
+
+        .empresa div {
+            line-height: 1.5;
         }
 
         .factura-box {
@@ -127,11 +143,29 @@
 
     <div class="top">
         <div class="empresa">
-            <h2>{{ venta.sede.nombre|default:"PuntoVentaPOS" }}</h2>
-            <div>RUC: 00000000000</div>
-            <div>Dirección de la empresa</div>
-            <div>Teléfono: -</div>
-            <div>Correo: -</div>
+
+            {% if empresa.logo %}
+                <img
+                    src="{{ empresa.logo.url }}"
+                    class="empresa-logo"
+                >
+            {% endif %}
+
+            <h2>{{ empresa.nombre_empresa }}</h2>
+
+            {% if empresa.razon_social %}
+                <div>{{ empresa.razon_social }}</div>
+            {% endif %}
+
+            <div>RUC: {{ empresa.ruc|default:"-" }}</div>
+            <div>{{ empresa.direccion|default:"-" }}</div>
+            <div>Teléfono: {{ empresa.telefono|default:"-" }}</div>
+            <div>Correo: {{ empresa.email|default:"-" }}</div>
+
+            {% if empresa.pagina_web %}
+                <div>{{ empresa.pagina_web }}</div>
+            {% endif %}
+
         </div>
 
         <div class="factura-box">
@@ -186,6 +220,10 @@
         <tr>
             <td><strong>Caja</strong></td>
             <td>{{ request.user.username|upper }}</td>
+        </tr>
+        <tr>
+            <td><strong>Sede</strong></td>
+            <td>{{ venta.sede.nombre|default:"-" }}</td>
         </tr>
     </table>
 
@@ -256,10 +294,6 @@
         </tr>
     </table>
 
-    <div style="margin-top: 20px;">
-        <strong>Valor en letras:</strong> -
-    </div>
-
     {% if venta.envio_domicilio %}
         <div style="margin-top: 15px;">
             <strong>Envío a domicilio:</strong><br>
@@ -269,7 +303,11 @@
     {% endif %}
 
     <div class="mensaje">
-        GRACIAS POR TU COMPRA
+        {% if empresa.pie_ticket %}
+            {{ empresa.pie_ticket|linebreaksbr }}
+        {% else %}
+            GRACIAS POR TU COMPRA
+        {% endif %}
     </div>
 
 </div>

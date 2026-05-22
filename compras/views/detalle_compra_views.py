@@ -1,22 +1,19 @@
+from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.http import HttpResponse
 from django.shortcuts import render
 
-from compras.models import DetalleCompra
-from compras.models import Proveedor
-from inventario.models import Sede
-from usuarios.decorators import administrador_required
-from django.contrib.auth import get_user_model
-from django.http import HttpResponse
 from openpyxl import Workbook
-from django.contrib.auth.decorators import login_required
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import SimpleDocTemplate
-from reportlab.platypus import Table
-from reportlab.platypus import TableStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 from reportlab.lib import colors
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.pagesizes import A4
+
+from compras.models import DetalleCompra, Proveedor
+from inventario.models import Sede, ConfiguracionEmpresa
+from core.services.pdf_empresa_service import agregar_cabecera_empresa
+from usuarios.decorators import administrador_required
+
 
 @administrador_required
 def detalle_compra_list(request):
@@ -33,13 +30,12 @@ def detalle_compra_list(request):
     usuarios = User.objects.filter(is_active=True).order_by('username')
 
     detalles = DetalleCompra.objects.select_related(
-    'compra',
-    'producto',
-    'compra__sede',
-    'compra__proveedor',
-    'compra__responsable'
+        'compra',
+        'producto',
+        'compra__sede',
+        'compra__proveedor',
+        'compra__responsable'
     ).all().order_by('-id')
-    print(detalles.count())
 
     if fecha_inicio:
         detalles = detalles.filter(compra__fecha_compra__date__gte=fecha_inicio)
@@ -84,9 +80,9 @@ def detalle_compra_list(request):
         }
     )
 
+
 @login_required
 def detalle_compra_excel(request):
-
     detalles = DetalleCompra.objects.select_related(
         'compra',
         'producto',
@@ -98,7 +94,7 @@ def detalle_compra_excel(request):
     ws = wb.active
     ws.title = 'Detalle Compras'
 
-    encabezados = [
+    ws.append([
         'Factura',
         'Bodega',
         'Fecha',
@@ -108,9 +104,7 @@ def detalle_compra_excel(request):
         'Devuelto',
         'Cantidad',
         'Total'
-    ]
-
-    ws.append(encabezados)
+    ])
 
     for detalle in detalles:
         ws.append([
@@ -128,13 +122,9 @@ def detalle_compra_excel(request):
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-
-    response[
-        'Content-Disposition'
-    ] = 'attachment; filename=detalle_compras.xlsx'
+    response['Content-Disposition'] = 'attachment; filename=detalle_compras.xlsx'
 
     wb.save(response)
-
     return response
 
 
@@ -151,50 +141,71 @@ def detalle_compra_pdf(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename=detalle_compras.pdf'
 
-    pdf = canvas.Canvas(response, pagesize=letter)
-    width, height = letter
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=A4,
+        rightMargin=40,
+        leftMargin=40,
+        topMargin=40,
+        bottomMargin=30
+    )
 
-    y = height - 50
+    elementos = []
 
-    pdf.setFont('Helvetica-Bold', 16)
-    pdf.drawString(40, y, 'Detalle de compras')
-    y -= 35
+    empresa = ConfiguracionEmpresa.obtener_configuracion()
 
-    pdf.setFont('Helvetica-Bold', 8)
-    pdf.drawString(40, y, 'Item')
-    pdf.drawString(75, y, 'Factura')
-    pdf.drawString(145, y, 'Producto')
-    pdf.drawString(330, y, 'Proveedor')
-    pdf.drawString(430, y, 'Cant.')
-    pdf.drawString(475, y, 'Devuelto')
-    pdf.drawString(535, y, 'Total')
-    y -= 18
+    agregar_cabecera_empresa(
+        elementos,
+        empresa,
+        'Detalle de Compras'
+    )
 
-    pdf.setFont('Helvetica', 8)
+    data = [[
+        'Item',
+        'Factura',
+        'Producto',
+        'Proveedor',
+        'Cant.',
+        'Devuelto',
+        'Total',
+    ]]
 
     total_general = 0
 
     for index, detalle in enumerate(detalles, start=1):
-        if y < 50:
-            pdf.showPage()
-            y = height - 50
-            pdf.setFont('Helvetica', 8)
-
         total_general += detalle.subtotal
 
-        pdf.drawString(40, y, str(index))
-        pdf.drawString(75, y, str(detalle.compra.codigo)[:12])
-        pdf.drawString(145, y, str(detalle.producto.nombre)[:28])
-        pdf.drawString(330, y, str(detalle.compra.proveedor.razon_social)[:18])
-        pdf.drawString(430, y, str(int(detalle.cantidad)))
-        pdf.drawString(475, y, str(int(detalle.cantidad_devuelta)))
-        pdf.drawString(535, y, f'S/ {detalle.subtotal:.2f}')
+        data.append([
+            str(index),
+            detalle.compra.codigo,
+            detalle.producto.nombre,
+            detalle.compra.proveedor.razon_social,
+            str(int(detalle.cantidad)),
+            str(int(detalle.cantidad_devuelta)),
+            f'S/ {detalle.subtotal:.2f}',
+        ])
 
-        y -= 18
+    data.append(['', '', '', 'TOTAL', '', '', f'S/ {total_general:.2f}'])
 
-    y -= 20
-    pdf.setFont('Helvetica-Bold', 10)
-    pdf.drawString(430, y, f'TOTAL: S/ {total_general:.2f}')
+    tabla = Table(
+        data,
+        colWidths=[30, 80, 150, 130, 40, 55, 65]
+    )
 
-    pdf.save()
+    tabla.setStyle(TableStyle([
+        ('FONTNAME',      (0, 0),  (-1, 0),  'Helvetica-Bold'),
+        ('FONTNAME',      (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE',      (0, 0),  (-1, -1), 9),
+        ('BOTTOMPADDING', (0, 0),  (-1, 0),  12),
+        ('TOPPADDING',    (0, 1),  (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 1),  (-1, -1), 8),
+        ('ALIGN',         (0, 0),  (-1, -1), 'LEFT'),
+        ('ALIGN',         (6, 1),  (6, -1),  'RIGHT'),
+        ('TEXTCOLOR',     (0, 0),  (-1, 0),  colors.black),
+    ]))
+
+    elementos.append(tabla)
+
+    doc.build(elementos)
+
     return response

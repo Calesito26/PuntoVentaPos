@@ -32,7 +32,12 @@ INSTALLED_APPS = [
     'inventario',
     'compras',
     'gastos',
+    'django_recaptcha',
 ]
+
+# settings.py
+RECAPTCHA_PUBLIC_KEY  = '6LfvAPcsAAAAALsIjdM_zGllMnyl7Ezj8OI5dWan'
+RECAPTCHA_PRIVATE_KEY = '6LfvAPcsAAAAABxM-GUog9-7VzkCYXn4dx5uR4Mg'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -57,6 +62,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'inventario.context_processors.empresa_config',
             ],
         },
     },

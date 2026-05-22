@@ -43,6 +43,7 @@ from inventario.views.exportar_promocion_views import exportar_promociones_pdf
 from inventario.views.seguimiento_producto_views import seguimiento_producto_list
 from inventario.views.exportar_seguimiento_views import exportar_seguimiento_excel
 from inventario.views.exportar_seguimiento_views import exportar_seguimiento_pdf
+from inventario.views.configuracion_empresa_views import configuracion_empresa
 
 app_name = 'inventario'
 
@@ -92,4 +93,5 @@ urlpatterns = [
     path('seguimiento-productos/',seguimiento_producto_list,name='seguimiento_producto_list'),
     path('seguimiento-productos/exportar/excel/',exportar_seguimiento_excel,name='exportar_seguimiento_excel'),
     path('seguimiento-productos/exportar/pdf/',exportar_seguimiento_pdf,name='exportar_seguimiento_pdf'),
+    path('configuracion/',configuracion_empresa,name='configuracion_empresa'),
 ]

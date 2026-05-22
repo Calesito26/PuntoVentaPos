@@ -3,11 +3,13 @@ import openpyxl
 from django.db.models import Q
 from django.http import HttpResponse
 
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
 
-from inventario.models import StockBodega
-from inventario.models import TrasladoBodega
+from inventario.models import ConfiguracionEmpresa, StockBodega, TrasladoBodega
+from core.services.pdf_empresa_service import agregar_cabecera_empresa
 from usuarios.decorators import vendedor_required
 
 
@@ -114,7 +116,6 @@ def exportar_seguimiento_excel(request):
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-
     response['Content-Disposition'] = 'attachment; filename=seguimiento_productos.xlsx'
 
     workbook.save(response)
@@ -129,76 +130,107 @@ def exportar_seguimiento_pdf(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename=seguimiento_productos.pdf'
 
-    pdf = canvas.Canvas(response, pagesize=letter)
-    width, height = letter
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=A4,
+        rightMargin=40,
+        leftMargin=40,
+        topMargin=40,
+        bottomMargin=30
+    )
 
-    y = height - 40
+    styles = getSampleStyleSheet()
+    elementos = []
 
-    pdf.setFont('Helvetica-Bold', 14)
-    pdf.drawString(40, y, 'Seguimiento de productos')
-    y -= 28
+    empresa = ConfiguracionEmpresa.obtener_configuracion()
 
-    pdf.setFont('Helvetica-Bold', 10)
-    pdf.drawString(40, y, 'Stock actual por bodega')
-    y -= 18
+    agregar_cabecera_empresa(
+        elementos,
+        empresa,
+        'Seguimiento de Productos'
+    )
 
-    pdf.setFont('Helvetica-Bold', 8)
-    pdf.drawString(40, y, 'Item')
-    pdf.drawString(70, y, 'Código')
-    pdf.drawString(145, y, 'Producto')
-    pdf.drawString(330, y, 'Bodega')
-    pdf.drawString(430, y, 'Stock')
-    pdf.drawString(490, y, 'Mínimo')
-    y -= 15
+    # --- Sección: Stock actual por bodega ---
+    elementos.append(Paragraph('Stock actual por bodega', styles['Heading2']))
+    elementos.append(Spacer(1, 6))
 
-    pdf.setFont('Helvetica', 8)
+    data_stock = [[
+        'Item',
+        'Código',
+        'Producto',
+        'Bodega',
+        'Stock',
+        'Mínimo',
+    ]]
 
     for index, stock in enumerate(stocks, start=1):
-        if y < 60:
-            pdf.showPage()
-            y = height - 40
-            pdf.setFont('Helvetica', 8)
+        data_stock.append([
+            str(index),
+            stock.producto.codigo,
+            stock.producto.nombre,
+            stock.sede.nombre,
+            str(int(stock.stock)),
+            str(int(stock.stock_minimo)),
+        ])
 
-        pdf.drawString(40, y, str(index))
-        pdf.drawString(70, y, stock.producto.codigo[:12])
-        pdf.drawString(145, y, stock.producto.nombre[:28])
-        pdf.drawString(330, y, stock.sede.nombre[:14])
-        pdf.drawString(430, y, str(int(stock.stock)))
-        pdf.drawString(490, y, str(int(stock.stock_minimo)))
-        y -= 15
+    tabla_stock = Table(
+        data_stock,
+        colWidths=[30, 75, 180, 120, 50, 55]
+    )
 
-    pdf.showPage()
-    y = height - 40
+    tabla_stock.setStyle(TableStyle([
+        ('FONTNAME',      (0, 0), (-1, 0),  'Helvetica-Bold'),
+        ('FONTSIZE',      (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0),  10),
+        ('TOPPADDING',    (0, 1), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ('ALIGN',         (0, 0), (-1, -1), 'LEFT'),
+        ('TEXTCOLOR',     (0, 0), (-1, 0),  colors.black),
+    ]))
 
-    pdf.setFont('Helvetica-Bold', 14)
-    pdf.drawString(40, y, 'Historial de movimientos')
-    y -= 28
+    elementos.append(tabla_stock)
+    elementos.append(Spacer(1, 20))
 
-    pdf.setFont('Helvetica-Bold', 8)
-    pdf.drawString(40, y, 'Item')
-    pdf.drawString(70, y, 'Fecha')
-    pdf.drawString(145, y, 'Código')
-    pdf.drawString(220, y, 'Producto')
-    pdf.drawString(380, y, 'Tipo')
-    pdf.drawString(440, y, 'Cantidad')
-    y -= 15
+    # --- Sección: Historial de movimientos ---
+    elementos.append(Paragraph('Historial de movimientos', styles['Heading2']))
+    elementos.append(Spacer(1, 6))
 
-    pdf.setFont('Helvetica', 8)
+    data_traslados = [[
+        'Item',
+        'Fecha',
+        'Código',
+        'Producto',
+        'Tipo',
+        'Cantidad',
+    ]]
 
     for index, traslado in enumerate(traslados, start=1):
-        if y < 50:
-            pdf.showPage()
-            y = height - 40
-            pdf.setFont('Helvetica', 8)
+        data_traslados.append([
+            str(index),
+            traslado.created.strftime('%d/%m/%Y'),
+            traslado.codigo,
+            traslado.producto.nombre,
+            'Traslado',
+            str(int(traslado.cantidad_traslado)),
+        ])
 
-        pdf.drawString(40, y, str(index))
-        pdf.drawString(70, y, traslado.created.strftime('%d/%m/%Y'))
-        pdf.drawString(145, y, traslado.codigo[:12])
-        pdf.drawString(220, y, traslado.producto.nombre[:24])
-        pdf.drawString(380, y, 'Traslado')
-        pdf.drawString(440, y, str(int(traslado.cantidad_traslado)))
-        y -= 15
+    tabla_traslados = Table(
+        data_traslados,
+        colWidths=[30, 70, 80, 200, 60, 60]
+    )
 
-    pdf.save()
+    tabla_traslados.setStyle(TableStyle([
+        ('FONTNAME',      (0, 0), (-1, 0),  'Helvetica-Bold'),
+        ('FONTSIZE',      (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0),  10),
+        ('TOPPADDING',    (0, 1), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ('ALIGN',         (0, 0), (-1, -1), 'LEFT'),
+        ('TEXTCOLOR',     (0, 0), (-1, 0),  colors.black),
+    ]))
+
+    elementos.append(tabla_traslados)
+
+    doc.build(elementos)
 
     return response

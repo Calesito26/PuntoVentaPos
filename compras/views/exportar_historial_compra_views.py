@@ -3,10 +3,13 @@ import openpyxl
 from django.db.models import Q
 from django.http import HttpResponse
 
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Spacer
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
 
 from compras.models import Compra
+from inventario.models import ConfiguracionEmpresa
+from core.services.pdf_empresa_service import agregar_cabecera_empresa
 from usuarios.decorators import administrador_required
 
 
@@ -106,48 +109,87 @@ def exportar_historial_compras_pdf(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename=historial_compras.pdf'
 
-    pdf = canvas.Canvas(response, pagesize=letter)
-    width, height = letter
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=A4,
+        rightMargin=40,
+        leftMargin=40,
+        topMargin=40,
+        bottomMargin=30
+    )
 
-    y = height - 40
+    elementos = []
 
-    pdf.setFont('Helvetica-Bold', 14)
-    pdf.drawString(40, y, 'Historial de compras')
-    y -= 28
+    # ✅ Cabecera dinámica con logo y datos de empresa
+    empresa = ConfiguracionEmpresa.obtener_configuracion()
 
-    pdf.setFont('Helvetica-Bold', 8)
-    pdf.drawString(40, y, 'Item')
-    pdf.drawString(70, y, 'Factura')
-    pdf.drawString(140, y, 'Bodega')
-    pdf.drawString(230, y, 'Proveedor')
-    pdf.drawString(390, y, 'Total')
-    pdf.drawString(470, y, 'Estado')
-    y -= 15
+    agregar_cabecera_empresa(
+        elementos,
+        empresa,
+        'Historial de Compras'
+    )
 
-    pdf.setFont('Helvetica', 8)
+    elementos.append(Spacer(1, 12))
+
+    data = [[
+        'Item',
+        'Factura',
+        'Bodega',
+        'Proveedor',
+        'Fecha',
+        'Atendió',
+        'Total',
+        'Estado'
+    ]]
 
     total = 0
 
     for index, compra in enumerate(compras, start=1):
         total += compra.total
 
-        if y < 50:
-            pdf.showPage()
-            y = height - 40
-            pdf.setFont('Helvetica', 8)
+        data.append([
+            str(index),
+            compra.codigo[:12],
+            compra.sede.nombre[:14],
+            compra.proveedor.razon_social[:25],
+            compra.fecha_compra.strftime('%d/%m/%Y'),
+            compra.responsable.username if compra.responsable else '-',
+            f'S/ {compra.total:.2f}',
+            compra.estado
+        ])
 
-        pdf.drawString(40, y, str(index))
-        pdf.drawString(70, y, compra.codigo[:12])
-        pdf.drawString(140, y, compra.sede.nombre[:14])
-        pdf.drawString(230, y, compra.proveedor.razon_social[:24])
-        pdf.drawString(390, y, f'S/ {compra.total:.2f}')
-        pdf.drawString(470, y, compra.estado)
+    tabla = Table(
+        data,
+        colWidths=[40, 70, 75, 100, 75, 70, 70, 70]
+    )
 
-        y -= 15
+    tabla.setStyle(TableStyle([
+        ('FONTNAME',      (0, 0), (-1, 0),  'Helvetica-Bold'),
+        ('FONTSIZE',      (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0),  10),
+        ('TOPPADDING',    (0, 1), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ('ALIGN',         (6, 0), (-1, -1), 'RIGHT'),
+        ('TEXTCOLOR',     (0, 0), (-1, 0),  colors.black),
+    ]))
 
-    y -= 15
-    pdf.setFont('Helvetica-Bold', 9)
-    pdf.drawString(390, y, f'TOTAL: S/ {total:.2f}')
+    elementos.append(tabla)
+    elementos.append(Spacer(1, 12))
 
-    pdf.save()
+    # Totales
+    totales_data = [
+        ['', '', '', '', '', 'TOTAL:', f'S/ {total:.2f}', '']
+    ]
+
+    totales_tabla = Table(totales_data, colWidths=[40, 70, 75, 100, 75, 70, 70, 70])
+    totales_tabla.setStyle(TableStyle([
+        ('FONTNAME',  (5, 0), (6, 0), 'Helvetica-Bold'),
+        ('FONTSIZE',  (5, 0), (6, 0), 9),
+        ('ALIGN',     (5, 0), (6, 0), 'RIGHT'),
+    ]))
+
+    elementos.append(totales_tabla)
+
+    doc.build(elementos)
+
     return response

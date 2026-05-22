@@ -1,8 +1,12 @@
 from decimal import Decimal, ROUND_HALF_UP
+from io import BytesIO
 
 from django.contrib import messages
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
+
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
 
 from clientes.models import Cliente
 from productos.models import Producto, Categoria
@@ -10,6 +14,8 @@ from ventas.models import Venta, DetalleVenta
 from inventario.models import StockBodega, Sede
 from usuarios.decorators import vendedor_required
 from usuarios.models import UsuarioSede
+from inventario.models import ConfiguracionEmpresa
+from django.core.mail import EmailMessage, get_connection
 
 
 def money(valor):
@@ -507,6 +513,7 @@ def confirmar_venta(request):
         venta_id=venta.id
     )
 
+
 @vendedor_required
 def quitar_producto_carrito(request, producto_id):
     carrito = obtener_carrito(request)
@@ -602,6 +609,7 @@ def ticket_venta(request, venta_id):
         }
     )
 
+
 @vendedor_required
 def resumen_venta(request, venta_id):
     venta = get_object_or_404(
@@ -617,6 +625,7 @@ def resumen_venta(request, venta_id):
         }
     )
 
+
 @vendedor_required
 def imprimir_ticket(request, venta_id):
     venta = get_object_or_404(
@@ -629,11 +638,14 @@ def imprimir_ticket(request, venta_id):
         id=venta_id
     )
 
+    empresa = ConfiguracionEmpresa.obtener_configuracion()
+
     return render(
         request,
         'ventas/imprimir_ticket.html',
         {
-            'venta': venta
+            'venta': venta,
+            'empresa': empresa
         }
     )
 
@@ -650,15 +662,100 @@ def imprimir_carta(request, venta_id):
         id=venta_id
     )
 
+    empresa = ConfiguracionEmpresa.obtener_configuracion()
+
     return render(
         request,
         'ventas/imprimir_carta.html',
         {
-            'venta': venta
+            'venta': venta,
+            'empresa': empresa
         }
     )
 
 
+# ─── Función auxiliar: genera PDF de la venta ────────────────────────────────
+def generar_pdf_venta(venta, empresa):
+    buffer = BytesIO()
+
+    pdf = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    y = height - 60
+
+    pdf.setFont('Helvetica-Bold', 18)
+    pdf.drawString(50, y, empresa.nombre_empresa or 'PuntoVentaPOS')
+
+    y -= 20
+    pdf.setFont('Helvetica', 10)
+    pdf.drawString(50, y, f'RUC: {empresa.ruc or "-"}')
+
+    y -= 15
+    pdf.drawString(50, y, f'Dirección: {empresa.direccion or "-"}')
+
+    y -= 15
+    pdf.drawString(50, y, f'Teléfono: {empresa.telefono or "-"}')
+
+    y -= 35
+    pdf.setFont('Helvetica-Bold', 14)
+    pdf.drawString(50, y, f'COMPROBANTE DE VENTA #{venta.id:06d}')
+
+    y -= 25
+    pdf.setFont('Helvetica', 10)
+    pdf.drawString(50, y, f'Cliente: {venta.cliente.nombre if venta.cliente else "-"}')
+
+    y -= 15
+    pdf.drawString(50, y, f'Fecha: {venta.created.strftime("%d/%m/%Y %H:%M")}')
+
+    y -= 30
+    pdf.setFont('Helvetica-Bold', 10)
+    pdf.drawString(50, y, 'Producto')
+    pdf.drawString(300, y, 'Cantidad')
+    pdf.drawString(380, y, 'Precio')
+    pdf.drawString(460, y, 'Subtotal')
+
+    y -= 15
+    pdf.setFont('Helvetica', 10)
+
+    for detalle in venta.detalles.all():
+        pdf.drawString(50, y, detalle.producto.nombre[:35])
+        pdf.drawString(310, y, str(detalle.cantidad))
+        pdf.drawString(380, y, f'S/ {detalle.precio_unitario}')
+        pdf.drawString(460, y, f'S/ {detalle.subtotal}')
+
+        y -= 18
+
+        if y < 80:
+            pdf.showPage()
+            y = height - 60
+
+    y -= 20
+    pdf.setFont('Helvetica-Bold', 11)
+    pdf.drawString(380, y, 'Subtotal:')
+    pdf.drawString(460, y, f'S/ {venta.subtotal}')
+
+    y -= 15
+    pdf.drawString(380, y, 'Descuento:')
+    pdf.drawString(460, y, f'S/ {venta.descuento}')
+
+    y -= 15
+    pdf.drawString(380, y, 'IGV:')
+    pdf.drawString(460, y, f'S/ {venta.impuesto}')
+
+    y -= 15
+    pdf.drawString(380, y, 'Total:')
+    pdf.drawString(460, y, f'S/ {venta.total}')
+
+    y -= 35
+    pdf.setFont('Helvetica', 10)
+    pdf.drawString(50, y, empresa.pie_ticket or 'Gracias por su compra')
+
+    pdf.save()
+    buffer.seek(0)
+    return buffer
+
+
+# ─── Vista: enviar factura por correo con PDF adjunto ────────────────────────
 @vendedor_required
 def enviar_factura_correo(request, venta_id):
     venta = get_object_or_404(
@@ -671,10 +768,117 @@ def enviar_factura_correo(request, venta_id):
         id=venta_id
     )
 
+    empresa = ConfiguracionEmpresa.obtener_configuracion()
+
+    correo_cliente = ''
+
+    if venta.cliente and venta.cliente.email:
+        correo_cliente = venta.cliente.email
+
+    if request.method == 'POST':
+        correo_destino = request.POST.get(
+            'correo_destino',
+            ''
+        ).strip()
+
+        if not correo_destino:
+            messages.error(
+                request,
+                'Ingrese el correo del cliente.'
+            )
+
+            return redirect(
+                'ventas:enviar_factura_correo',
+                venta_id=venta.id
+            )
+
+        if not empresa.smtp_email or not empresa.smtp_password:
+            messages.error(
+                request,
+                'Configure el correo de la empresa en Config > Sucursal.'
+            )
+
+            return redirect(
+                'ventas:enviar_factura_correo',
+                venta_id=venta.id
+            )
+
+        try:
+            connection = get_connection(
+                host=empresa.smtp_host,
+                port=empresa.smtp_port,
+                username=empresa.smtp_email,
+                password=empresa.smtp_password,
+                use_tls=True
+            )
+
+            asunto = (
+                f'Comprobante de venta #{venta.id:06d} - '
+                f'{empresa.nombre_empresa}'
+            )
+
+            cuerpo = f"""
+Hola {venta.cliente.nombre if venta.cliente else 'cliente'},
+
+Adjuntamos el resumen de su compra realizada en {empresa.nombre_empresa}.
+
+Detalle de venta:
+Comprobante: #{venta.id:06d}
+Fecha: {venta.created.strftime('%d/%m/%Y %H:%M')}
+Total: S/ {venta.total}
+Método de pago: {venta.metodo_pago}
+
+Gracias por su compra.
+
+{empresa.pie_ticket or ''}
+"""
+
+            email = EmailMessage(
+                subject=asunto,
+                body=cuerpo,
+                from_email=empresa.smtp_email,
+                to=[correo_destino],
+                connection=connection
+            )
+
+            # ✅ Generar PDF y adjuntarlo al correo
+            pdf_buffer = generar_pdf_venta(venta, empresa)
+
+            email.attach(
+                f'comprobante_venta_{venta.id:06d}.pdf',
+                pdf_buffer.getvalue(),
+                'application/pdf'
+            )
+
+            email.send()
+
+            messages.success(
+                request,
+                'Factura enviada correctamente al correo del cliente.'
+            )
+
+            return redirect(
+                'ventas:resumen_venta',
+                venta_id=venta.id
+            )
+
+        except Exception as error:
+            messages.error(
+                request,
+                f'No se pudo enviar el correo: {error}'
+            )
+
+            return redirect(
+                'ventas:enviar_factura_correo',
+                venta_id=venta.id
+            )
+
     return render(
         request,
         'ventas/enviar_factura_correo.html',
         {
-            'venta': venta
+            'venta': venta,
+            'empresa': empresa,
+            'correo_cliente': correo_cliente
         }
     )

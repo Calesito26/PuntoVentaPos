@@ -23,6 +23,13 @@ from compras.views.compra_categoria_views import compras_por_categoria_pdf
 from compras.views.devolucion_compra_views import devolucion_compra_list
 from compras.views.devolucion_compra_views import devolucion_compra_excel
 from compras.views.devolucion_compra_views import devolucion_compra_pdf
+from compras.views.proveedor_views import proveedor_list
+from compras.views.proveedor_views import proveedor_create
+from compras.views.proveedor_views import proveedor_update
+from compras.views.proveedor_views import proveedor_delete
+from compras.views.proveedor_views import exportar_proveedores_excel
+from compras.views.proveedor_views import exportar_proveedores_pdf
+from compras.views.proveedor_views import proveedor_list
 
 app_name = 'compras'
 
@@ -51,4 +58,11 @@ urlpatterns = [
     path('devoluciones/',devolucion_compra_list,name='devolucion_compra_list'),
     path('devoluciones/exportar/excel/',devolucion_compra_excel,name='devolucion_compra_excel'),
     path('devoluciones/exportar/pdf/',devolucion_compra_pdf,name='devolucion_compra_pdf'),
+    path('proveedores/', proveedor_list,name='proveedor_list'),
+    path('proveedores/nuevo/',proveedor_create,name='proveedor_create'),
+    path('proveedores/editar/<int:proveedor_id>/',proveedor_update,name='proveedor_update'),
+    path('proveedores/eliminar/<int:proveedor_id>/',proveedor_delete,name='proveedor_delete'),
+    path('proveedores/exportar/excel/',exportar_proveedores_excel,name='exportar_proveedores_excel'),
+    path('proveedores/exportar/pdf/',exportar_proveedores_pdf,name='exportar_proveedores_pdf'),
+    path('proveedores/',proveedor_list,name='proveedor_list'),
 ]

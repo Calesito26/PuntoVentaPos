@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+
     <title>
         Ticket #{{ venta.id }}
     </title>
@@ -9,20 +10,20 @@
     <style>
         *{
             box-sizing:border-box;
-            font-family: Arial, sans-serif;
+            font-family:Arial, sans-serif;
         }
 
         body{
             margin:0;
             padding:0;
             background:white;
+            color:#000;
         }
 
         .ticket{
             width:80mm;
             margin:auto;
             padding:8px;
-            color:#000;
             font-size:12px;
         }
 
@@ -83,6 +84,27 @@
             font-size:11px;
         }
 
+        .logo-ticket{
+            max-height:55px;
+            max-width:180px;
+            object-fit:contain;
+            margin-bottom:6px;
+        }
+
+        .btn-print{
+            position:fixed;
+            top:20px;
+            right:20px;
+            background:#1e5aa8;
+            color:white;
+            border:none;
+            padding:12px 24px;
+            border-radius:6px;
+            cursor:pointer;
+            font-size:16px;
+            z-index:999;
+        }
+
         @media print {
 
             body{
@@ -97,20 +119,8 @@
                 width:80mm;
             }
         }
-
-        .btn-print{
-            position:fixed;
-            top:20px;
-            right:20px;
-            background:#1e5aa8;
-            color:white;
-            border:none;
-            padding:12px 24px;
-            border-radius:6px;
-            cursor:pointer;
-            font-size:16px;
-        }
     </style>
+
 </head>
 
 <body>
@@ -124,11 +134,43 @@
 
 <div class="ticket">
 
+    <!-- EMPRESA -->
     <div class="center">
 
+        {% if empresa.logo %}
+            <img
+                src="{{ empresa.logo.url }}"
+                class="logo-ticket"
+            >
+        {% endif %}
+
         <div class="empresa">
-            {{ venta.sede.nombre|default:"PuntoVentaPOS" }}
+            {{ empresa.nombre_empresa }}
         </div>
+
+        {% if empresa.ruc %}
+            <div class="small">
+                RUC: {{ empresa.ruc }}
+            </div>
+        {% endif %}
+
+        {% if empresa.direccion %}
+            <div class="small">
+                {{ empresa.direccion }}
+            </div>
+        {% endif %}
+
+        {% if empresa.telefono %}
+            <div class="small">
+                Tel: {{ empresa.telefono }}
+            </div>
+        {% endif %}
+
+        {% if empresa.email %}
+            <div class="small">
+                {{ empresa.email }}
+            </div>
+        {% endif %}
 
         <div class="small">
             Ticket #{{ venta.id|stringformat:"06d" }}
@@ -142,27 +184,34 @@
 
     <hr>
 
+    <!-- CLIENTE -->
     {% if venta.cliente %}
+
         <div>
             <strong>Cliente:</strong>
             {{ venta.cliente.nombre }}
         </div>
 
         {% if venta.cliente.numero_documento %}
-        <div>
-            <strong>Doc:</strong>
-            {{ venta.cliente.numero_documento }}
-        </div>
+            <div>
+                <strong>Doc:</strong>
+                {{ venta.cliente.numero_documento }}
+            </div>
         {% endif %}
+
+        <hr>
+
     {% endif %}
 
-    <hr>
-
+    <!-- PRODUCTOS -->
     <table>
 
         <thead>
             <tr>
-                <th>Producto</th>
+                <th>
+                    Producto
+                </th>
+
                 <th class="right">
                     Total
                 </th>
@@ -172,21 +221,25 @@
         <tbody>
 
             {% for detalle in venta.detalles.all %}
-            <tr>
-                <td>
-                    {{ detalle.producto.nombre }}
 
-                    <br>
+                <tr>
 
-                    {{ detalle.cantidad }}
-                    x
-                    S/ {{ detalle.precio_unitario }}
-                </td>
+                    <td>
+                        {{ detalle.producto.nombre }}
 
-                <td class="right">
-                    S/ {{ detalle.subtotal }}
-                </td>
-            </tr>
+                        <br>
+
+                        {{ detalle.cantidad }}
+                        x
+                        S/ {{ detalle.precio_unitario }}
+                    </td>
+
+                    <td class="right">
+                        S/ {{ detalle.subtotal }}
+                    </td>
+
+                </tr>
+
             {% endfor %}
 
         </tbody>
@@ -195,12 +248,14 @@
 
     <hr>
 
+    <!-- TOTALES -->
     <table class="totales">
 
         <tr>
             <td>
                 Subtotal
             </td>
+
             <td class="right">
                 S/ {{ venta.subtotal }}
             </td>
@@ -210,6 +265,7 @@
             <td>
                 Descuento
             </td>
+
             <td class="right">
                 -S/ {{ venta.descuento }}
             </td>
@@ -219,65 +275,89 @@
             <td>
                 IGV
             </td>
+
             <td class="right">
                 S/ {{ venta.impuesto }}
             </td>
         </tr>
 
+        {% if venta.costo_envio > 0 %}
         <tr>
+
             <td>
                 Delivery
             </td>
+
             <td class="right">
                 S/ {{ venta.costo_envio }}
             </td>
+
         </tr>
+        {% endif %}
 
         <tr class="bold">
+
             <td>
                 TOTAL
             </td>
+
             <td class="right">
                 S/ {{ venta.total }}
             </td>
+
         </tr>
 
         <tr>
+
             <td>
                 {{ venta.metodo_pago }}
             </td>
+
             <td class="right">
                 S/ {{ venta.monto_recibido }}
             </td>
+
         </tr>
 
         <tr class="bold">
+
             <td>
                 CAMBIO
             </td>
+
             <td class="right">
                 S/ {{ venta.cambio }}
             </td>
+
         </tr>
 
     </table>
 
     <hr>
 
+    <!-- PIE TICKET -->
     <div class="footer">
-        Gracias por su compra
-        <br>
-        Vuelva pronto
+
+        {% if empresa.pie_ticket %}
+            {{ empresa.pie_ticket|linebreaksbr }}
+        {% else %}
+            Gracias por su compra
+            <br>
+            Vuelva pronto
+        {% endif %}
+
     </div>
 
 </div>
 
 <script>
-    window.onload = function () {
-        setTimeout(() => {
-            window.print();
-        }, 500);
-    }
+window.onload = function () {
+
+    setTimeout(() => {
+        window.print();
+    }, 500);
+
+};
 </script>
 
 </body>

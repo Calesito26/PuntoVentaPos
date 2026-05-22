@@ -5,8 +5,14 @@ from django.http import HttpResponse
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 
-from inventario.models import TrasladoBodega
-from usuarios.decorators import administrador_required
+from inventario.models import (
+    TrasladoBodega,
+    ConfiguracionEmpresa
+)
+
+from usuarios.decorators import (
+    administrador_required
+)
 
 
 @administrador_required
@@ -20,6 +26,7 @@ def exportar_traslado_excel(request):
     )
 
     workbook = openpyxl.Workbook()
+
     hoja = workbook.active
     hoja.title = 'Traslados'
 
@@ -36,15 +43,24 @@ def exportar_traslado_excel(request):
     ])
 
     for traslado in traslados:
+
         hoja.append([
             traslado.codigo,
-            traslado.created.strftime('%d/%m/%Y %H:%M'),
+            traslado.created.strftime(
+                '%d/%m/%Y %H:%M'
+            ),
             traslado.sede_origen.nombre,
             traslado.sede_destino.nombre,
             traslado.producto.nombre,
-            float(traslado.cantidad_traslado),
-            float(traslado.valor_traslado),
-            str(traslado.responsable),
+            float(
+                traslado.cantidad_traslado
+            ),
+            float(
+                traslado.valor_traslado
+            ),
+            str(
+                traslado.responsable
+            ),
             traslado.estado,
         ])
 
@@ -64,10 +80,18 @@ def exportar_traslado_excel(request):
 @administrador_required
 def exportar_traslado_pdf(request):
 
-    traslados = TrasladoBodega.objects.select_related(
-        'sede_origen',
-        'sede_destino',
-        'producto'
+    traslados = (
+        TrasladoBodega.objects
+        .select_related(
+            'sede_origen',
+            'sede_destino',
+            'producto'
+        )
+    )
+
+    empresa = (
+        ConfiguracionEmpresa
+        .obtener_configuracion()
     )
 
     response = HttpResponse(
@@ -85,18 +109,105 @@ def exportar_traslado_pdf(request):
 
     width, height = letter
 
-    y = height - 40
+    y = height - 45
 
-    pdf.setFont('Helvetica-Bold', 14)
+    # ==================
+    # CABECERA EMPRESA
+    # ==================
+
+    if empresa.logo:
+        try:
+            pdf.drawImage(
+                empresa.logo.path,
+                40,
+                y - 50,
+                width=70,
+                height=50,
+                preserveAspectRatio=True,
+                mask='auto'
+            )
+        except Exception:
+            pass
+
+    pdf.setFont(
+        'Helvetica-Bold',
+        16
+    )
+
+    pdf.drawString(
+        125,
+        y,
+        empresa.nombre_empresa
+        or
+        'PuntoVentaPOS'
+    )
+
+    y -= 18
+
+    pdf.setFont(
+        'Helvetica',
+        9
+    )
+
+    if empresa.ruc:
+        pdf.drawString(
+            125,
+            y,
+            f'RUC: {empresa.ruc}'
+        )
+        y -= 13
+
+    if empresa.direccion:
+        pdf.drawString(
+            125,
+            y,
+            f'Dirección: {empresa.direccion}'
+        )
+        y -= 13
+
+    if empresa.telefono:
+        pdf.drawString(
+            125,
+            y,
+            f'Teléfono: {empresa.telefono}'
+        )
+        y -= 13
+
+    if empresa.email:
+        pdf.drawString(
+            125,
+            y,
+            f'Correo: {empresa.email}'
+        )
+        y -= 13
+
+    y -= 20
+
+    # ==================
+    # TITULO REPORTE
+    # ==================
+
+    pdf.setFont(
+        'Helvetica-Bold',
+        15
+    )
+
     pdf.drawString(
         40,
         y,
-        'Historial de traslados'
+        'Historial de Traslados'
     )
 
-    y -= 30
+    y -= 28
 
-    pdf.setFont('Helvetica-Bold', 8)
+    # ==================
+    # CABECERA TABLA
+    # ==================
+
+    pdf.setFont(
+        'Helvetica-Bold',
+        8
+    )
 
     pdf.drawString(40, y, 'Cod')
     pdf.drawString(90, y, 'Producto')
@@ -104,15 +215,55 @@ def exportar_traslado_pdf(request):
     pdf.drawString(320, y, 'Destino')
     pdf.drawString(420, y, 'Cantidad')
 
-    y -= 15
+    y -= 16
 
-    pdf.setFont('Helvetica', 8)
+    pdf.setFont(
+        'Helvetica',
+        8
+    )
+
+    # ==================
+    # DETALLE
+    # ==================
 
     for traslado in traslados:
 
         if y < 50:
+
             pdf.showPage()
-            y = height - 40
+
+            y = height - 45
+
+            pdf.setFont(
+                'Helvetica-Bold',
+                15
+            )
+
+            pdf.drawString(
+                40,
+                y,
+                'Historial de Traslados'
+            )
+
+            y -= 28
+
+            pdf.setFont(
+                'Helvetica-Bold',
+                8
+            )
+
+            pdf.drawString(40, y, 'Cod')
+            pdf.drawString(90, y, 'Producto')
+            pdf.drawString(230, y, 'Origen')
+            pdf.drawString(320, y, 'Destino')
+            pdf.drawString(420, y, 'Cantidad')
+
+            y -= 16
+
+            pdf.setFont(
+                'Helvetica',
+                8
+            )
 
         pdf.drawString(
             40,

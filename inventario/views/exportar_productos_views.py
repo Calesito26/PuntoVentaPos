@@ -3,10 +3,12 @@ import openpyxl
 from django.http import HttpResponse
 from django.shortcuts import render
 
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
 
-from inventario.models import StockBodega
+from inventario.models import ConfiguracionEmpresa, StockBodega
+from core.services.pdf_empresa_service import agregar_cabecera_empresa
 from usuarios.decorators import administrador_required
 
 
@@ -71,7 +73,6 @@ def exportar_productos_excel(request):
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-
     response['Content-Disposition'] = 'attachment; filename=productos_inventario.xlsx'
 
     workbook.save(response)
@@ -86,41 +87,61 @@ def exportar_productos_pdf(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename=productos_inventario.pdf'
 
-    pdf = canvas.Canvas(response, pagesize=letter)
-    width, height = letter
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=A4,
+        rightMargin=40,
+        leftMargin=40,
+        topMargin=40,
+        bottomMargin=30
+    )
 
-    y = height - 40
+    elementos = []
 
-    pdf.setFont('Helvetica-Bold', 14)
-    pdf.drawString(40, y, 'Productos de inventario')
-    y -= 30
+    empresa = ConfiguracionEmpresa.obtener_configuracion()
 
-    pdf.setFont('Helvetica-Bold', 8)
-    pdf.drawString(40, y, 'Item')
-    pdf.drawString(70, y, 'Código')
-    pdf.drawString(150, y, 'Nombre')
-    pdf.drawString(330, y, 'Bodega')
-    pdf.drawString(430, y, 'Stock')
-    pdf.drawString(480, y, 'Venta')
-    y -= 15
+    agregar_cabecera_empresa(
+        elementos,
+        empresa,
+        'Productos de Inventario'
+    )
 
-    pdf.setFont('Helvetica', 8)
+    data = [[
+        'Item',
+        'Código',
+        'Nombre',
+        'Bodega',
+        'Stock',
+        'Venta',
+    ]]
 
     for index, stock in enumerate(stocks, start=1):
-        if y < 40:
-            pdf.showPage()
-            y = height - 40
-            pdf.setFont('Helvetica', 8)
+        data.append([
+            str(index),
+            stock.producto.codigo,
+            stock.producto.nombre,
+            stock.sede.nombre if stock.sede else '-',
+            str(stock.stock),
+            f'S/ {stock.producto.precio_venta}',
+        ])
 
-        pdf.drawString(40, y, str(index))
-        pdf.drawString(70, y, stock.producto.codigo)
-        pdf.drawString(150, y, stock.producto.nombre[:28])
-        pdf.drawString(330, y, stock.sede.nombre[:15])
-        pdf.drawString(430, y, str(stock.stock))
-        pdf.drawString(480, y, f'S/ {stock.producto.precio_venta}')
+    tabla = Table(
+        data,
+        colWidths=[30, 70, 190, 110, 50, 65]
+    )
 
-        y -= 15
+    tabla.setStyle(TableStyle([
+        ('FONTNAME',      (0, 0), (-1, 0),  'Helvetica-Bold'),
+        ('FONTSIZE',      (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0),  10),
+        ('TOPPADDING',    (0, 1), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ('ALIGN',         (0, 0), (-1, -1), 'LEFT'),
+        ('TEXTCOLOR',     (0, 0), (-1, 0),  colors.black),
+    ]))
 
-    pdf.save()
+    elementos.append(tabla)
+
+    doc.build(elementos)
 
     return response

@@ -6,7 +6,7 @@
 
 {% block content %}
 
-<div class="page-card">
+<div class="page-card" style="max-width: 900px;">
 
     <h1 class="h3 fw-bold mb-4">
         {{ titulo }}
@@ -16,7 +16,87 @@
 
         {% csrf_token %}
 
-        {{ form.as_p }}
+        <div class="row">
+
+            <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Tipo de documento</label>
+                {{ form.tipo_documento }}
+            </div>
+
+            <div class="col-md-5 mb-3">
+                <label class="form-label fw-bold">Número de documento</label>
+                {{ form.numero_documento }}
+            </div>
+
+            <div class="col-md-3 mb-3 d-flex align-items-end">
+                <button
+                    type="button"
+                    class="btn btn-primary w-100"
+                    id="btnBuscarDocumento"
+                >
+                    Buscar
+                </button>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Usuario</label>
+                {{ form.username }}
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Contraseña</label>
+                {{ form.password }}
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Nombre completo</label>
+                {{ form.first_name }}
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Correo electrónico</label>
+                {{ form.email }}
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Teléfono</label>
+                {{ form.telefono }}
+            </div>
+
+            <div class="col-md-12 mb-3">
+                <label class="form-label fw-bold">Dirección</label>
+                {{ form.direccion }}
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Cargo</label>
+                {{ form.rol }}
+            </div>
+
+            <div class="col-md-6 mb-3" id="sedeBox">
+                <label class="form-label fw-bold">Sucursal asignada</label>
+                {{ form.sede }}
+                <small class="text-muted">
+                    Solo obligatorio para vendedores.
+                </small>
+            </div>
+
+            <div class="col-md-12 mb-4">
+                <div class="form-check">
+                    {{ form.is_active }}
+                    <label class="form-check-label">
+                        Activo
+                    </label>
+                </div>
+            </div>
+
+        </div>
+
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                Revise los campos del formulario.
+            </div>
+        {% endif %}
 
         <button class="btn btn-primary">
             Guardar
@@ -32,5 +112,75 @@
     </form>
 
 </div>
+
+<script>
+    const btnBuscarDocumento = document.getElementById('btnBuscarDocumento');
+    const tipoDocumento = document.getElementById('id_tipo_documento');
+    const numeroDocumento = document.getElementById('id_numero_documento');
+    const inputNombre = document.getElementById('id_first_name');
+
+    if (btnBuscarDocumento) {
+        btnBuscarDocumento.addEventListener('click', function () {
+            if (!numeroDocumento.value.trim()) {
+                alert('Ingrese un número de documento.');
+                return;
+            }
+
+            btnBuscarDocumento.disabled = true;
+            btnBuscarDocumento.innerText = 'Buscando...';
+
+            fetch(`/clientes/buscar-documento/?tipo_documento=${tipoDocumento.value}&numero_documento=${numeroDocumento.value}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error HTTP ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.ok) {
+                        inputNombre.value = data.nombre || '';
+                    } else {
+                        alert(data.mensaje || 'No se encontró información.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error API documento:', error);
+                    alert('No se pudo consultar el documento. Revisa que la API esté configurada.');
+                })
+                .finally(() => {
+                    btnBuscarDocumento.disabled = false;
+                    btnBuscarDocumento.innerText = 'Buscar';
+                });
+        });
+    }
+
+    function controlarSede() {
+        const rolSelect = document.getElementById('id_rol');
+        const sedeBox = document.getElementById('sedeBox');
+
+        if (!rolSelect || !sedeBox) {
+            return;
+        }
+
+        const textoRol = rolSelect.options[rolSelect.selectedIndex].text.toLowerCase();
+
+        if (textoRol.includes('vendedor')) {
+            sedeBox.style.display = 'block';
+        } else {
+            sedeBox.style.display = 'none';
+            const sedeSelect = document.getElementById('id_sede');
+            if (sedeSelect) {
+                sedeSelect.value = '';
+            }
+        }
+    }
+
+    const rolSelect = document.getElementById('id_rol');
+
+    if (rolSelect) {
+        rolSelect.addEventListener('change', controlarSede);
+        controlarSede();
+    }
+</script>
 
 {% endblock %}

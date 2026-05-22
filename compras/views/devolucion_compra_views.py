@@ -5,10 +5,13 @@ from django.shortcuts import render
 
 import openpyxl
 
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
 
 from compras.models import DevolucionCompra
+from inventario.models import ConfiguracionEmpresa
+from core.services.pdf_empresa_service import agregar_cabecera_empresa
 from usuarios.decorators import administrador_required
 
 
@@ -121,50 +124,71 @@ def devolucion_compra_pdf(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename=devoluciones_compras.pdf'
 
-    pdf = canvas.Canvas(response, pagesize=letter)
-    width, height = letter
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=A4,
+        rightMargin=40,
+        leftMargin=40,
+        topMargin=40,
+        bottomMargin=30
+    )
 
-    y = height - 50
+    elementos = []
 
-    pdf.setFont('Helvetica-Bold', 16)
-    pdf.drawString(40, y, 'Devoluciones Compras')
-    y -= 35
+    empresa = ConfiguracionEmpresa.obtener_configuracion()
 
-    pdf.setFont('Helvetica-Bold', 8)
-    pdf.drawString(40, y, 'Item')
-    pdf.drawString(75, y, 'Devolucion')
-    pdf.drawString(155, y, 'Factura')
-    pdf.drawString(235, y, 'Fecha')
-    pdf.drawString(350, y, 'Proveedor')
-    pdf.drawString(470, y, 'Valor')
-    pdf.drawString(530, y, 'Estado')
-    y -= 18
+    agregar_cabecera_empresa(
+        elementos,
+        empresa,
+        'Devoluciones Compras'
+    )
 
-    pdf.setFont('Helvetica', 8)
+    data = [[
+        'Item',
+        'Devolución',
+        'Factura',
+        'Fecha',
+        'Proveedor',
+        'Valor',
+        'Estado',
+    ]]
 
     total = 0
 
     for index, dev in enumerate(devoluciones, start=1):
-        if y < 50:
-            pdf.showPage()
-            y = height - 50
-            pdf.setFont('Helvetica', 8)
-
         total += dev.valor
 
-        pdf.drawString(40, y, str(index))
-        pdf.drawString(75, y, dev.codigo)
-        pdf.drawString(155, y, dev.compra.codigo)
-        pdf.drawString(235, y, dev.fecha.strftime('%Y-%m-%d %H:%M'))
-        pdf.drawString(350, y, str(dev.proveedor.razon_social)[:18])
-        pdf.drawString(470, y, f'S/ {dev.valor:.2f}')
-        pdf.drawString(530, y, dev.estado)
+        data.append([
+            str(index),
+            dev.codigo,
+            dev.compra.codigo,
+            dev.fecha.strftime('%Y-%m-%d %H:%M'),
+            dev.proveedor.razon_social if dev.proveedor else '-',
+            f'S/ {dev.valor:.2f}',
+            dev.estado,
+        ])
 
-        y -= 18
+    data.append(['', '', '', '', 'TOTAL', f'S/ {total:.2f}', ''])
 
-    y -= 20
-    pdf.setFont('Helvetica-Bold', 10)
-    pdf.drawString(430, y, f'TOTAL: S/ {total:.2f}')
+    tabla = Table(
+        data,
+        colWidths=[30, 80, 80, 100, 120, 60, 55]
+    )
 
-    pdf.save()
+    tabla.setStyle(TableStyle([
+        ('FONTNAME',      (0, 0), (-1, 0),  'Helvetica-Bold'),
+        ('FONTNAME',      (0, -1), (-1, -1), 'Helvetica-Bold'),
+        ('FONTSIZE',      (0, 0), (-1, -1), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, 0),  12),
+        ('TOPPADDING',    (0, 1), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+        ('ALIGN',         (0, 0), (-1, -1), 'LEFT'),
+        ('ALIGN',         (5, 1), (5, -1),  'RIGHT'),
+        ('TEXTCOLOR',     (0, 0), (-1, 0),  colors.black),
+    ]))
+
+    elementos.append(tabla)
+
+    doc.build(elementos)
+
     return response

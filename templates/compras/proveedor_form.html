@@ -1,0 +1,299 @@
+{% extends 'base/base.html' %}
+
+{% block title %}
+    {{ titulo }}
+{% endblock %}
+
+{% block content %}
+
+<div
+    class="page-card"
+    style="max-width: 900px;"
+>
+
+    <h1 class="h3 fw-bold mb-4">
+        {{ titulo }}
+    </h1>
+
+    <form method="post">
+
+        {% csrf_token %}
+
+        <div class="row">
+
+            <div class="col-md-4 mb-3">
+
+                <label class="form-label fw-bold">
+                    Tipo de documento
+                </label>
+
+                <select
+                    name="tipo_documento"
+                    id="tipoDocumento"
+                    class="form-select"
+                >
+                    <option
+                        value="RUC"
+                        {% if proveedor.tipo_documento == 'RUC' %}
+                            selected
+                        {% endif %}
+                    >
+                        RUC
+                    </option>
+
+                    <option
+                        value="DNI"
+                        {% if proveedor.tipo_documento == 'DNI' %}
+                            selected
+                        {% endif %}
+                    >
+                        DNI
+                    </option>
+
+                    <option
+                        value="CE"
+                        {% if proveedor.tipo_documento == 'CE' %}
+                            selected
+                        {% endif %}
+                    >
+                        Carnet Extranjería
+                    </option>
+
+                </select>
+
+            </div>
+
+            <div class="col-md-5 mb-3">
+
+                <label class="form-label fw-bold">
+                    Número de documento
+                </label>
+
+                <input
+                    type="text"
+                    name="numero_documento"
+                    id="numeroDocumento"
+                    class="form-control"
+                    value="{{ proveedor.numero_documento|default:'' }}"
+                    required
+                >
+
+            </div>
+
+            <div class="col-md-3 mb-3 d-flex align-items-end">
+
+                <button
+                    type="button"
+                    class="btn btn-primary w-100"
+                    id="btnBuscarDocumento"
+                >
+                    Buscar
+                </button>
+
+            </div>
+
+            <div class="col-md-12 mb-3">
+
+                <label class="form-label fw-bold">
+                    Nombre / Razón social
+                </label>
+
+                <input
+                    type="text"
+                    name="razon_social"
+                    id="razonSocial"
+                    class="form-control"
+                    value="{{ proveedor.razon_social|default:'' }}"
+                    required
+                >
+
+                <small class="text-muted">
+                    Si consulta DNI/RUC este campo se completará automáticamente.
+                </small>
+
+            </div>
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label fw-bold">
+                    Teléfono
+                </label>
+
+                <input
+                    type="text"
+                    name="telefono"
+                    class="form-control"
+                    value="{{ proveedor.telefono|default:'' }}"
+                >
+
+            </div>
+
+            <div class="col-md-6 mb-3">
+
+                <label class="form-label fw-bold">
+                    Correo electrónico
+                </label>
+
+                <input
+                    type="email"
+                    name="email"
+                    class="form-control"
+                    value="{{ proveedor.email|default:'' }}"
+                >
+
+            </div>
+
+            <div class="col-md-12 mb-3">
+
+                <label class="form-label fw-bold">
+                    Dirección
+                </label>
+
+                <input
+                    type="text"
+                    name="direccion"
+                    class="form-control"
+                    value="{{ proveedor.direccion|default:'' }}"
+                >
+
+                <small class="text-muted">
+                    Opcional. Útil para compras, facturación o garantías.
+                </small>
+
+            </div>
+
+            <div class="col-md-12 mb-4">
+
+                <div class="form-check">
+
+                    <input
+                        type="checkbox"
+                        class="form-check-input"
+                        name="activo"
+                        id="activo"
+                        {% if proveedor.activo or not editar %}
+                            checked
+                        {% endif %}
+                    >
+
+                    <label
+                        class="form-check-label"
+                        for="activo"
+                    >
+                        Activo
+                    </label>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="d-flex gap-2">
+
+            <button class="btn btn-primary">
+                Guardar
+            </button>
+
+            <a
+                href="{% url 'compras:proveedor_list' %}"
+                class="btn btn-secondary"
+            >
+                Cancelar
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+<script>
+const btnBuscarDocumento =
+    document.getElementById(
+        'btnBuscarDocumento'
+    );
+
+const tipoDocumento =
+    document.getElementById(
+        'tipoDocumento'
+    );
+
+const numeroDocumento =
+    document.getElementById(
+        'numeroDocumento'
+    );
+
+const razonSocial =
+    document.getElementById(
+        'razonSocial'
+    );
+
+if (btnBuscarDocumento) {
+
+    btnBuscarDocumento.addEventListener(
+        'click',
+        function () {
+
+            if (
+                !numeroDocumento.value.trim()
+            ) {
+
+                alert(
+                    'Ingrese un número de documento.'
+                );
+
+                return;
+            }
+
+            btnBuscarDocumento.disabled =
+                true;
+
+            btnBuscarDocumento.innerText =
+                'Buscando...';
+
+            fetch(
+                `/compras/proveedores/consultar-documento/ajax/?tipo=${tipoDocumento.value}&numero=${numeroDocumento.value}`
+            )
+            .then(
+                response => response.json()
+            )
+            .then(data => {
+
+                if (data.ok) {
+
+                    razonSocial.value =
+                        data.nombre || '';
+
+                } else {
+
+                    alert(
+                        data.mensaje ||
+                        'No se encontró información.'
+                    );
+                }
+
+            })
+            .catch(() => {
+
+                alert(
+                    'Error al consultar la API.'
+                );
+
+            })
+            .finally(() => {
+
+                btnBuscarDocumento.disabled =
+                    false;
+
+                btnBuscarDocumento.innerText =
+                    'Buscar';
+
+            });
+
+        }
+    );
+}
+</script>
+
+{% endblock %}

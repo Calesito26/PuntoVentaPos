@@ -1,16 +1,22 @@
-from django.db.models import Q
-from django.shortcuts import render
-
-from compras.models import Compra
-from inventario.models import Sede
-from usuarios.decorators import administrador_required
-from compras.models import DevolucionCompra
 import json
-from django.http import JsonResponse
+from decimal import Decimal
+
+from django.db.models import Q
 from django.db import transaction
-from compras.models import DetalleCompra
-from inventario.models import StockBodega
-from django.shortcuts import get_object_or_404
+from django.http import JsonResponse, HttpResponse
+from django.shortcuts import render, get_object_or_404
+
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet
+
+from compras.models import Compra, DetalleCompra, DevolucionCompra
+from compras.models import Proveedor
+from inventario.models import Sede, StockBodega, ConfiguracionEmpresa
+from usuarios.decorators import administrador_required
+from core.services.pdf_empresa_service import agregar_cabecera_empresa
+
 
 @administrador_required
 def historial_compra_list(request):
@@ -64,6 +70,7 @@ def historial_compra_list(request):
             'total_compras': total_compras,
         }
     )
+
 
 @administrador_required
 def compra_devolucion_data(request, pk):
@@ -139,8 +146,6 @@ def procesar_devolucion_compra(request, pk):
             'ok': False,
             'mensaje': 'Ingrese productos a devolver.'
         })
-
-    from decimal import Decimal
 
     total_devuelto = Decimal('0.00')
 
@@ -233,6 +238,7 @@ def eliminar_compra(request, pk):
         'mensaje': 'Compra anulada correctamente.'
     })
 
+
 @administrador_required
 def imprimir_compra(request, pk):
     compra = get_object_or_404(
@@ -247,10 +253,107 @@ def imprimir_compra(request, pk):
         pk=pk
     )
 
-    return render(
-        request,
-        'compras/imprimir_compra.html',
-        {
-            'compra': compra
-        }
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename=compra_{compra.codigo}.pdf'
+
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=A4,
+        rightMargin=40,
+        leftMargin=40,
+        topMargin=40,
+        bottomMargin=30
     )
+
+    elementos = []
+    styles = getSampleStyleSheet()
+
+    # ✅ Cabecera dinámica con logo y datos de empresa
+    empresa = ConfiguracionEmpresa.obtener_configuracion()
+
+    agregar_cabecera_empresa(
+        elementos,
+        empresa,
+        'Comprobante de Compra'
+    )
+
+    # Información de compra
+    elementos.append(Spacer(1, 12))
+
+    info_data = [
+        ['Código:', compra.codigo, 'Fecha:', compra.fecha_compra.strftime('%d/%m/%Y')],
+        ['Comprobante:', compra.numero_comprobante or '-', 'Estado:', compra.estado],
+        ['Proveedor:', compra.proveedor.razon_social, 'RUC:', compra.proveedor.numero_documento],
+        ['Dirección:', compra.proveedor.direccion or '-', 'Sede:', compra.sede.nombre],
+    ]
+
+    info_tabla = Table(info_data, colWidths=[80, 180, 80, 160])
+    info_tabla.setStyle(TableStyle([
+        ('FONTNAME',  (0, 0), (-1, -1), 'Helvetica'),
+        ('FONTSIZE',  (0, 0), (-1, -1), 8),
+        ('VALIGN',    (0, 0), (-1, -1), 'TOP'),
+        ('TOPPADDING',    (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+    ]))
+
+    elementos.append(info_tabla)
+    elementos.append(Spacer(1, 12))
+
+    # Tabla de productos
+    data = [[
+        'Item',
+        'Producto',
+        'Cantidad',
+        'Precio Unit.',
+        'Subtotal'
+    ]]
+
+    total = Decimal('0.00')
+
+    for index, detalle in enumerate(compra.detalles.all(), start=1):
+        subtotal = detalle.cantidad * detalle.precio_compra
+        total += subtotal
+
+        data.append([
+            str(index),
+            detalle.producto.nombre[:40],
+            f'{detalle.cantidad:.2f}',
+            f'S/ {detalle.precio_compra:.2f}',
+            f'S/ {subtotal:.2f}'
+        ])
+
+    tabla = Table(
+        data,
+        colWidths=[40, 240, 70, 80, 80]
+    )
+
+    tabla.setStyle(TableStyle([
+        ('FONTNAME',      (0, 0), (-1, 0),  'Helvetica-Bold'),
+        ('FONTSIZE',      (0, 0), (-1, -1), 9),
+        ('BOTTOMPADDING', (0, 0), (-1, 0),  10),
+        ('TOPPADDING',    (0, 1), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ('ALIGN',         (2, 0), (-1, -1), 'RIGHT'),
+        ('TEXTCOLOR',     (0, 0), (-1, 0),  colors.black),
+    ]))
+
+    elementos.append(tabla)
+    elementos.append(Spacer(1, 12))
+
+    # Totales
+    totales_data = [
+        ['', '', '', 'TOTAL:', f'S/ {total:.2f}']
+    ]
+
+    totales_tabla = Table(totales_data, colWidths=[40, 240, 70, 80, 80])
+    totales_tabla.setStyle(TableStyle([
+        ('FONTNAME',      (3, 0), (-1, 0), 'Helvetica-Bold'),
+        ('FONTSIZE',      (3, 0), (-1, 0), 10),
+        ('ALIGN',         (3, 0), (-1, 0), 'RIGHT'),
+    ]))
+
+    elementos.append(totales_tabla)
+
+    doc.build(elementos)
+
+    return response

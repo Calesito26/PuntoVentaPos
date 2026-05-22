@@ -1,18 +1,21 @@
 import json
-import openpyxl
 
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render, get_object_or_404
 
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
-from django.views.decorators.http import require_POST
+import openpyxl
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+
 from clientes.services.documento_service import DocumentoService
+from compras.models.proveedor import Proveedor
 from gastos.models.gasto import Gasto
 from gastos.models.categoria_gasto import CategoriaGasto
-from compras.models.proveedor import Proveedor
+from inventario.models import ConfiguracionEmpresa
+from core.services.pdf_empresa_service import agregar_cabecera_empresa
 
 
 def gasto_list(request):
@@ -179,45 +182,72 @@ def gasto_pdf(request):
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename=historial_gastos.pdf'
 
-    pdf = canvas.Canvas(response, pagesize=letter)
-    width, height = letter
+    doc = SimpleDocTemplate(
+        response,
+        pagesize=A4,
+        rightMargin=40,
+        leftMargin=40,
+        topMargin=40,
+        bottomMargin=30
+    )
 
-    y = height - 50
+    elementos = []
 
-    pdf.setFont('Helvetica-Bold', 16)
-    pdf.drawString(40, y, 'Historial de Gastos')
-    y -= 35
+    # ✅ Cabecera dinámica con logo y datos de empresa
+    empresa = ConfiguracionEmpresa.obtener_configuracion()
 
-    pdf.setFont('Helvetica-Bold', 8)
-    pdf.drawString(40, y, 'Item')
-    pdf.drawString(70, y, 'Fecha')
-    pdf.drawString(150, y, 'Descripcion')
-    pdf.drawString(290, y, 'Categoria')
-    pdf.drawString(380, y, 'Proveedor')
-    pdf.drawString(470, y, 'Responsable')
-    pdf.drawString(540, y, 'Valor')
-    pdf.drawString(600, y, 'Estado')
-    y -= 18
+    agregar_cabecera_empresa(
+        elementos,
+        empresa,
+        'Historial de Gastos'
+    )
 
-    pdf.setFont('Helvetica', 8)
+    data = [[
+        'Item',
+        'Fecha',
+        'Descripción',
+        'Categoría',
+        'Proveedor',
+        'Responsable',
+        'Método de pago',
+        'Valor',
+        'Caja',
+        'Estado'
+    ]]
 
     for index, gasto in enumerate(gastos, start=1):
-        if y < 50:
-            pdf.showPage()
-            y = height - 50
-            pdf.setFont('Helvetica', 8)
+        data.append([
+            str(index),
+            gasto.fecha.strftime('%Y-%m-%d'),
+            gasto.descripcion[:25],
+            gasto.categoria.nombre[:15],
+            gasto.proveedor.razon_social if gasto.proveedor else '-',
+            gasto.responsable.username if gasto.responsable else '-',
+            gasto.metodo_pago,
+            f'S/ {gasto.valor:.2f}',
+            'SI' if gasto.sacar_caja else 'NO',
+            gasto.estado
+        ])
 
-        pdf.drawString(40, y, str(index))
-        pdf.drawString(70, y, gasto.fecha.strftime('%Y-%m-%d'))
-        pdf.drawString(150, y, gasto.descripcion[:25])
-        pdf.drawString(290, y, gasto.categoria.nombre[:15])
-        pdf.drawString(380, y, gasto.responsable.username if gasto.responsable else '')
-        pdf.drawString(470, y, f'S/ {gasto.valor:.2f}')
-        pdf.drawString(530, y, gasto.estado)
+    tabla = Table(
+        data,
+        colWidths=[35, 60, 90, 70, 80, 65, 60, 50, 35, 50]
+    )
 
-        y -= 18
+    tabla.setStyle(TableStyle([
+        ('FONTNAME',      (0, 0), (-1, 0),  'Helvetica-Bold'),
+        ('FONTSIZE',      (0, 0), (-1, -1), 8),
+        ('BOTTOMPADDING', (0, 0), (-1, 0),  10),
+        ('TOPPADDING',    (0, 1), (-1, -1), 6),
+        ('BOTTOMPADDING', (0, 1), (-1, -1), 6),
+        ('ALIGN',         (0, 0), (-1, -1), 'LEFT'),
+        ('TEXTCOLOR',     (0, 0), (-1, 0),  colors.black),
+    ]))
 
-    pdf.save()
+    elementos.append(tabla)
+
+    doc.build(elementos)
+
     return response
 
 
