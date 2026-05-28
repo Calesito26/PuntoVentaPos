@@ -93,5 +93,5 @@ class DocumentoService:
         except requests.RequestException:
             return {
                 'ok': False,
-                'mensaje': 'Error al conectar con la API.'
+                'mensaje': 'Error al conectar con la API'
             }
