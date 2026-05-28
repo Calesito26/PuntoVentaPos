@@ -64,6 +64,7 @@ class DocumentoService:
             }
 
         url = f'https://dniruc.apisperu.com/api/v1/ruc/{numero_documento}'
+        
 
         headers = {
             'Authorization': f'Bearer {token}'
